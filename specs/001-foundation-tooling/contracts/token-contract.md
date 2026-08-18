@@ -9,7 +9,12 @@ All tokens live in `src/tokens/tokens.css`. No other file declares a visual valu
 ## File structure (normative)
 
 ```css
-@import "tailwindcss" prefix(fui);
+/* Amended 2026-08-19 (implementation): granular imports skip preflight.css —
+   the full "tailwindcss" import ships global element resets, which violates
+   package-contract guarantee 4 (stylesheet must not restyle host elements). */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme) prefix(fui);
+@import "tailwindcss/utilities.css" layer(utilities) prefix(fui);
 
 @theme {
   /* kill off-system defaults so no non-token color/radius utility exists */

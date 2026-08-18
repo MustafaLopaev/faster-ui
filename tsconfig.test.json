@@ -24,6 +24,7 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
+    "src/main.tsx",
     "src/**/*.test.tsx",
     "src/**/*.stories.tsx",
     "jest.setup.ts",
