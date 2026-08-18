@@ -122,9 +122,11 @@
   --fui-white-a7: rgb(255 255 255 / 0.07); /* Dark/Stroke Color/Control Stroke/Default (#FFF @ 7%) */
   --fui-white-a4: rgb(255 255 255 / 0.04); /* DERIVED: sunken fill on dark; follows the white-alpha dark pattern */
 
-  /* Radius (Figma component geometry: Button/Input radius 4, Dialog panel radius 8) */
-  --fui-radius-4: 0.25rem; /* 4px — Button + Input corner radius */
-  --fui-radius-8: 0.5rem; /* 8px — Dialog panel corner radius */
+  /* Radius (Figma component geometry: Button/Input radius 4; Dialog panel
+     corners re-verified per node at [4,4,4,4] on every set/size — the earlier
+     8px reading was the demo artboard frame, not the panel; --fui-radius-8
+     deleted with it, no consumer remains) */
+  --fui-radius-4: 0.25rem; /* 4px — Button + Input + Dialog panel corner radius */
   --fui-radius-full: 999px; /* pill/circular shapes on doc pages */
 
   /* Spacing base (Figma 4px grid — every observed component pad/gap is a multiple) */
@@ -211,6 +213,37 @@
   --fui-border-subtle: var(--fui-black-a8);
   --fui-border-disabled: var(--fui-neutral-200);
   --fui-focus-ring: var(--fui-primary-600);
+
+  /* Action — ghost (Button "Ghost" sets: fill tint on hover/pressed only) */
+  --fui-action-ghost-hover: var(--fui-neutral-100); /* Neutral/100 — Ghost Hover fill */
+  --fui-action-ghost-active: var(--fui-neutral-300); /* Neutral/300 — Ghost Pressed fill */
+  --fui-action-ghost-danger-hover: var(--fui-danger-100); /* Danger/100 — Ghost danger Hover fill */
+  --fui-action-ghost-danger-active: var(--fui-danger-300); /* Danger/300 — Ghost danger Pressed fill */
+
+  /* Action — danger outline (Button "Outline" danger set: border = label, per state) */
+  --fui-action-danger-outline: var(--fui-danger-600); /* Danger/600 — Default */
+  --fui-action-danger-outline-hover: var(--fui-danger-500); /* Danger/500 — Hover */
+  --fui-action-danger-outline-active: var(--fui-danger-700); /* Danger/700 — Pressed */
+  --fui-action-danger-outline-disabled: var(--fui-danger-400); /* Danger/400 — Disabled */
+
+  /* Action — link disabled (Link set Disabled: Primary/400, deliberately
+     lighter than the filled disabled Primary/300) */
+  --fui-action-link-disabled: var(--fui-primary-400); /* Primary/400 — Link Disabled */
+
+  /* Action — clear affordance (Input "State 2" axis: circle-x fills) */
+  --fui-action-clear: var(--fui-neutral-400); /* Neutral/400 — rest */
+  --fui-action-clear-hover: var(--fui-neutral-500); /* Neutral/500 — Clear Hover */
+  --fui-action-clear-active: var(--fui-neutral-600); /* Neutral/600 — Clear Pressed */
+
+  /* Borders — component states beyond the foundation set */
+  --fui-border-hover: var(--fui-primary-500); /* Primary/500 — Input Hover border */
+  --fui-border-strong: var(--fui-neutral-200); /* Neutral/200 — Dialog divider hairlines */
+
+  /* Text & icons — control-level inks */
+  --fui-text-control: var(--fui-neutral-600); /* Neutral/600 — Input value, Dialog body */
+  --fui-text-heading: var(--fui-neutral-700); /* Neutral/700 — Dialog title */
+  --fui-text-placeholder-disabled: var(--fui-neutral-300); /* Neutral/300 — Input Disabled placeholder */
+  --fui-icon-muted: var(--fui-neutral-500); /* Neutral/500 — Dialog close icon; Input icon/affix/stepper adornments at rest */
 }
 
 /* Dark mode — `dark` class on the document root, nothing else (FR-013).
@@ -230,6 +263,12 @@
   --fui-border-default: var(--fui-white-a7); /* Figma Dark/Stroke Color/Control Stroke */
   --fui-border-subtle: var(--fui-white-a7); /* gap: no Dark divider style readable; nearest Figma dark stroke */
   --fui-border-disabled: var(--fui-white-a7); /* gap: no Dark disabled stroke readable */
+
+  --fui-action-clear-active: var(--fui-white-a79); /* derived: pressed ink must lighten, not darken, on ink surfaces */
+  --fui-border-strong: var(--fui-white-a7); /* mirrors dark border-default (Figma Dark/Stroke Color/Control Stroke) */
+  --fui-text-control: var(--fui-white-a79); /* Figma Dark/Fill Color/Text/Secondary */
+  --fui-text-heading: var(--fui-white-a90); /* derived: mirrors dark text-color-primary */
+  --fui-text-placeholder-disabled: var(--fui-white-a30); /* derived: mirrors dark placeholder */
 }
 
 /* ── 3. BRIDGE — the only utility-generating token surface ──────────────────
@@ -270,10 +309,28 @@
   --color-border-subtle: var(--fui-border-subtle);
   --color-border-disabled: var(--fui-border-disabled);
   --color-focus-ring: var(--fui-focus-ring);
+  --color-action-ghost-hover: var(--fui-action-ghost-hover);
+  --color-action-ghost-active: var(--fui-action-ghost-active);
+  --color-action-ghost-danger-hover: var(--fui-action-ghost-danger-hover);
+  --color-action-ghost-danger-active: var(--fui-action-ghost-danger-active);
+  --color-action-danger-outline: var(--fui-action-danger-outline);
+  --color-action-danger-outline-hover: var(--fui-action-danger-outline-hover);
+  --color-action-danger-outline-active: var(--fui-action-danger-outline-active);
+  --color-action-danger-outline-disabled: var(--fui-action-danger-outline-disabled);
+  --color-action-link-disabled: var(--fui-action-link-disabled);
+  --color-action-clear: var(--fui-action-clear);
+  --color-action-clear-hover: var(--fui-action-clear-hover);
+  --color-action-clear-active: var(--fui-action-clear-active);
+  --color-border-hover: var(--fui-border-hover);
+  --color-border-strong: var(--fui-border-strong);
+  --color-text-control: var(--fui-text-control);
+  --color-text-heading: var(--fui-text-heading);
+  --color-text-placeholder-disabled: var(--fui-text-placeholder-disabled);
+  --color-icon-muted: var(--fui-icon-muted);
 
   /* Radius → fui:rounded-control, fui:rounded-surface, fui:rounded-full */
   --radius-control: var(--fui-radius-4);
-  --radius-surface: var(--fui-radius-8);
+  --radius-surface: var(--fui-radius-4);
   --radius-full: var(--fui-radius-full);
 
   /* Spacing base → fui:p-*, fui:gap-* … on the Figma 4px grid */

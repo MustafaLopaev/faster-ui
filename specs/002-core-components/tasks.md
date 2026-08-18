@@ -32,9 +32,9 @@ Dialog P3, US4 keyboard journey P1-composite, US5 dark mode P2).
 
 **Purpose**: Feature-level initialization
 
-- [ ] T001 Install `cypress-real-events` as a devDependency (research R-11) and register it via `import 'cypress-real-events/support'` in cypress/support/component.ts
-- [ ] T002 Apply the full token delta per [contracts/tokens-delta.md](contracts/tokens-delta.md) in src/tokens/tokens.css: 18 new §2 semantics with Figma-style comments, their `.dark` re-declarations (action-clear-active, border-strong, text-control, text-heading, text-placeholder-disabled), matching §3 `@theme inline` bridge entries, `--radius-surface` → `var(--fui-radius-4)`, delete `--fui-radius-8`
-- [ ] T003 Verify the token delta end-to-end: `npm run build` succeeds and dist/styles.css contains the new `--fui-*` semantics with `--radius-surface` resolving to 0.25rem; `npm run typecheck` stays green
+- [X] T001 Install `cypress-real-events` as a devDependency (research R-11) and register it via `import 'cypress-real-events/support'` in cypress/support/component.ts
+- [X] T002 Apply the full token delta per [contracts/tokens-delta.md](contracts/tokens-delta.md) in src/tokens/tokens.css: 18 new §2 semantics with Figma-style comments, their `.dark` re-declarations (action-clear-active, border-strong, text-control, text-heading, text-placeholder-disabled), matching §3 `@theme inline` bridge entries, `--radius-surface` → `var(--fui-radius-4)`, delete `--fui-radius-8`
+- [X] T003 Verify the token delta end-to-end: `npm run build` succeeds and dist/styles.css contains the new `--fui-*` semantics with `--radius-surface` resolving to 0.25rem; `npm run typecheck` stays green
 
 ---
 
@@ -44,8 +44,8 @@ Dialog P3, US4 keyboard journey P1-composite, US5 dark mode P2).
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] Create `cn(...parts: Array<string | false | null | undefined>): string` falsy-filtering class join helper (research R-1) in src/lib/cn.ts
-- [ ] T005 [P] De-risk platform assumptions in a scratch story/playground and record findings as a short addendum in specs/002-core-components/research.md: (a) `fui:animate-spin` utility generates with the prefix (R-3), (b) `fui:backdrop:bg-overlay` styles `::backdrop` (R-8), (c) arbitrary-property utilities for `appearance` resets work prefixed (R-6), (d) jsdom `HTMLDialogElement.showModal/close` exist under Jest 30 (R-10) — if (d) fails, add the minimal method shim to jest.setup.ts
+- [X] T004 [P] Create `cn(...parts: Array<string | false | null | undefined>): string` falsy-filtering class join helper (research R-1) in src/lib/cn.ts
+- [X] T005 [P] De-risk platform assumptions in a scratch story/playground and record findings as a short addendum in specs/002-core-components/research.md: (a) `fui:animate-spin` utility generates with the prefix (R-3), (b) `fui:backdrop:bg-overlay` styles `::backdrop` (R-8), (c) arbitrary-property utilities for `appearance` resets work prefixed (R-6), (d) jsdom `HTMLDialogElement.showModal/close` exist under Jest 30 (R-10) — if (d) fails, add the minimal method shim to jest.setup.ts
 
 **Checkpoint**: Foundation ready — user story implementation can now begin
 
