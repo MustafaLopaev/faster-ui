@@ -184,7 +184,7 @@ Please be prepared to walk us through:
 
 ### Figma File
 
-<https://www.figma.com/design/WYuHdUuUq31HzkdJhoKwXl/TapTap-Design-System%E4%B8%A8Developers--Community-?node-id=12-11244&p=f&t=IdkiBp7B4GxCdKAF-0>
+<https://www.figma.com/design/7OfpQVe2pYpE9MF5pQeXhH/taptap-design-copy?node-id=12-11244&m=dev>
 
 ### Tailwind CSS
 

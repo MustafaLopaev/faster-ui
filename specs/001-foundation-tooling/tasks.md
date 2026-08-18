@@ -26,9 +26,9 @@
 
 **Purpose**: Dependencies installed, scaffold reshaped, TypeScript projects split
 
-- [ ] T001 Install all new devDependencies (latest stable): `npm i -D tailwindcss @tailwindcss/vite jest jest-environment-jsdom @swc/core @swc/jest @types/jest @testing-library/react @testing-library/jest-dom @testing-library/user-event cypress storybook @storybook/react-vite @storybook/addon-a11y vite-plugin-dts` — record resolved majors in package.json (zero runtime deps, Principle VI)
-- [ ] T002 [P] Remove scaffold app remnants: delete `src/App.tsx`, `src/App.css`, `src/index.css`, `src/assets/`, `public/vite.svg`; keep `index.html` + `src/main.tsx` as the dev-playground shell (content rebuilt in T010)
-- [ ] T003 [P] Split TypeScript projects per [research R-8](research.md): replace `tsconfig.app.json` with `tsconfig.lib.json` (src, excluding `**/*.test.tsx`, `**/*.cy.tsx`, `**/*.stories.tsx`), add `tsconfig.test.json` (test files + jest types), `tsconfig.cypress.json` (`**/*.cy.tsx` + `cypress/**` + cypress types), keep `tsconfig.node.json` (config files, add jest/cypress/storybook configs); root `tsconfig.json` references all four
+- [X] T001 Install all new devDependencies (latest stable): `npm i -D tailwindcss @tailwindcss/vite jest jest-environment-jsdom @swc/core @swc/jest @types/jest @testing-library/react @testing-library/jest-dom @testing-library/user-event cypress storybook @storybook/react-vite @storybook/addon-a11y vite-plugin-dts` — record resolved majors in package.json (zero runtime deps, Principle VI)
+- [X] T002 [P] Remove scaffold app remnants: delete `src/App.tsx`, `src/App.css`, `src/index.css`, `src/assets/`, `public/vite.svg`; keep `index.html` + `src/main.tsx` as the dev-playground shell (content rebuilt in T010)
+- [X] T003 [P] Split TypeScript projects per [research R-8](research.md): replace `tsconfig.app.json` with `tsconfig.lib.json` (src, excluding `**/*.test.tsx`, `**/*.cy.tsx`, `**/*.stories.tsx`), add `tsconfig.test.json` (test files + jest types), `tsconfig.cypress.json` (`**/*.cy.tsx` + `cypress/**` + cypress types), keep `tsconfig.node.json` (config files, add jest/cypress/storybook configs); root `tsconfig.json` references all four
 
 ---
 
@@ -38,8 +38,8 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Add `@tailwindcss/vite` plugin to `vite.config.ts` alongside the react plugin (library-mode build config comes later in T022)
-- [ ] T005 Verify baseline gates on the reshaped scaffold: `npm run lint` and `npx tsc -b` exit 0, `npm run dev` serves without errors
+- [X] T004 Add `@tailwindcss/vite` plugin to `vite.config.ts` alongside the react plugin (library-mode build config comes later in T022)
+- [X] T005 Verify baseline gates on the reshaped scaffold: `npm run lint` and `npx tsc -b` exit 0, `npm run dev` serves without errors
 
 **Checkpoint**: Toolchain skeleton healthy — user story implementation can begin
 
