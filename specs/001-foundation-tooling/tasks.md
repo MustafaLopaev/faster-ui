@@ -68,12 +68,12 @@
 
 **Independent Test**: `npm test` and `npm run cy:ct` each exit 0 running the Smoke suites (spec US2 scenarios 1–3).
 
-- [ ] T012 [P] [US2] Configure Jest per [research R-4](research.md): `jest.config.ts` (`@swc/jest` transform with automatic JSX runtime, `jest-environment-jsdom`, `moduleNameMapper` `\.css$` → `jest/style-stub.js`, setup `jest.setup.ts`), create `jest.setup.ts` (imports `@testing-library/jest-dom`) and `jest/style-stub.js`; add `test`/`test:watch` scripts to `package.json`
-- [ ] T013 [P] [US2] Configure Cypress CT per [research R-5](research.md): `cypress.config.ts` (`framework: 'react'`, `bundler: 'vite'`, specPattern `src/**/*.cy.tsx`), `cypress/support/component.ts` (registers `cy.mount`, imports `src/tokens/tokens.css`), `cypress/support/component-index.html`; add `cy:ct`/`cy:open` scripts to `package.json`
-- [ ] T014 [US2] Create the Smoke component: `src/components/Smoke/Smoke.tsx` (props extend `ComponentPropsWithoutRef<'div'>`, ref reaches the root element, merge-safe `className`, styled with semantic `fui:` utilities only — action background, on-action text, control radius, token spacing), `src/components/Smoke/index.ts` barrel, temporary export from `src/index.ts`
-- [ ] T015 [P] [US2] Jest suite in `src/components/Smoke/Smoke.test.tsx`: renders children, forwards ref to the root element, merges `className` with base styling intact, passes through native div attributes
-- [ ] T016 [P] [US2] Cypress suite in `src/components/Smoke/Smoke.cy.tsx`: mounts; asserts computed `background-color` equals the resolved semantic token value (proves the token chain live in a real browser); adds `.dark` to the document root and asserts the computed color flips to the dark value (FR-013 evidence)
-- [ ] T017 [US2] Verify US2 checkpoint: `npm test` exits 0 and `npm run cy:ct` exits 0
+- [X] T012 [P] [US2] Configure Jest per [research R-4](research.md): `jest.config.ts` (`@swc/jest` transform with automatic JSX runtime, `jest-environment-jsdom`, `moduleNameMapper` `\.css$` → `jest/style-stub.js`, setup `jest.setup.ts`), create `jest.setup.ts` (imports `@testing-library/jest-dom`) and `jest/style-stub.js`; add `test`/`test:watch` scripts to `package.json`
+- [X] T013 [P] [US2] Configure Cypress CT per [research R-5](research.md): `cypress.config.ts` (`framework: 'react'`, `bundler: 'vite'`, specPattern `src/**/*.cy.tsx`), `cypress/support/component.ts` (registers `cy.mount`, imports `src/tokens/tokens.css`), `cypress/support/component-index.html`; add `cy:ct`/`cy:open` scripts to `package.json`
+- [X] T014 [US2] Create the Smoke component: `src/components/Smoke/Smoke.tsx` (props extend `ComponentPropsWithoutRef<'div'>`, ref reaches the root element, merge-safe `className`, styled with semantic `fui:` utilities only — action background, on-action text, control radius, token spacing), `src/components/Smoke/index.ts` barrel, temporary export from `src/index.ts`
+- [X] T015 [P] [US2] Jest suite in `src/components/Smoke/Smoke.test.tsx`: renders children, forwards ref to the root element, merges `className` with base styling intact, passes through native div attributes
+- [X] T016 [P] [US2] Cypress suite in `src/components/Smoke/Smoke.cy.tsx`: mounts; asserts computed `background-color` equals the resolved semantic token value (proves the token chain live in a real browser); adds `.dark` to the document root and asserts the computed color flips to the dark value (FR-013 evidence)
+- [X] T017 [US2] Verify US2 checkpoint: `npm test` exits 0 and `npm run cy:ct` exits 0
 
 **Checkpoint**: Both test harnesses proven against a real token-styled component
 

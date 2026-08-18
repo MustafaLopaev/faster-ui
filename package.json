@@ -7,6 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "typecheck": "tsc -b",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "cy:ct": "cypress run --component",
+    "cy:open": "cypress open --component",
     "preview": "vite preview"
   },
   "dependencies": {
