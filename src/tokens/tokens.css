@@ -14,7 +14,12 @@
  *      only color/radius utilities that exist (all `fui:`-prefixed).
  */
 
-@import "tailwindcss" prefix(fui);
+/* Granular import — deliberately skips preflight.css: the shipped stylesheet
+   must never restyle host elements (package-contract guarantee 4). Components
+   own every property they need; no global resets are assumed. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme) prefix(fui);
+@import "tailwindcss/utilities.css" layer(utilities) prefix(fui);
 
 @theme {
   /* Wipe Tailwind defaults: no off-system color or radius utility may exist. */
