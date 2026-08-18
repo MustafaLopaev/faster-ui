@@ -12,7 +12,9 @@
     "test:watch": "jest --watch",
     "cy:ct": "cypress run --component",
     "cy:open": "cypress open --component",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "react": "^19.2.8",
