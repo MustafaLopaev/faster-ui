@@ -85,9 +85,9 @@
 
 **Independent Test**: `npm run storybook` lists the Smoke story rendering token-styled with a clean console; `npm run build-storybook` exits 0 (spec US3 scenarios 1–3).
 
-- [ ] T018 [US3] Configure Storybook per [research R-6](research.md): `.storybook/main.ts` (`@storybook/react-vite`, stories glob `src/**/*.stories.tsx`, `@storybook/addon-a11y`), `.storybook/preview.ts` (imports `src/tokens/tokens.css`; global `theme` toolbar light/dark + decorator toggling `.dark` on the document root); add `storybook`/`build-storybook` scripts to `package.json`
-- [ ] T019 [US3] Stories in `src/components/Smoke/Smoke.stories.tsx`: default story plus full-control exposure (children, className, native props) serving as the Playground pattern for future components
-- [ ] T020 [US3] Verify US3 checkpoint: Smoke story renders with zero console errors/warnings, theme toolbar flips its colors live (SC-007), and `npm run build-storybook` exits 0
+- [X] T018 [US3] Configure Storybook per [research R-6](research.md): `.storybook/main.ts` (`@storybook/react-vite`, stories glob `src/**/*.stories.tsx`, `@storybook/addon-a11y`), `.storybook/preview.ts` (imports `src/tokens/tokens.css`; global `theme` toolbar light/dark + decorator toggling `.dark` on the document root); add `storybook`/`build-storybook` scripts to `package.json`
+- [X] T019 [US3] Stories in `src/components/Smoke/Smoke.stories.tsx`: default story plus full-control exposure (children, className, native props) serving as the Playground pattern for future components
+- [X] T020 [US3] Verify US3 checkpoint: Smoke story renders with zero console errors/warnings, theme toolbar flips its colors live (SC-007), and `npm run build-storybook` exits 0
 
 **Checkpoint**: Documentation workbench operational with mode switching
 
