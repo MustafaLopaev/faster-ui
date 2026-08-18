@@ -11,6 +11,16 @@ node_modules
 dist
 dist-ssr
 *.local
+.env*
+
+# Build & test artifacts
+coverage
+storybook-static
+cypress/screenshots
+cypress/videos
+cypress/downloads
+*.tsbuildinfo
+*.tgz
 
 # Editor directories and files
 .vscode/*
