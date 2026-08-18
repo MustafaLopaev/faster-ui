@@ -2,5 +2,5 @@
 // The token stylesheet is imported here so the library build emits dist/styles.css.
 import './tokens/tokens.css'
 
-export { Smoke } from './components/Smoke'
-export type { SmokeProps } from './components/Smoke'
+export { Button } from './components/Button'
+export type { ButtonProps } from './components/Button'
