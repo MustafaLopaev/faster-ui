@@ -111,10 +111,10 @@
 
 **Purpose**: Feature-level acceptance against every success criterion
 
-- [ ] T024 Run the full fresh-clone gate per [quickstart §1](quickstart.md): `npm ci` (or rm -rf node_modules && npm install), then `npm run lint`, `npm run typecheck`, `npm test`, `npm run cy:ct`, `npm run build-storybook`, `npm run build` — all exit 0 with no undocumented steps (SC-002, SC-003)
-- [ ] T025 [P] Run `/token-audit` over `src/` — zero hardcoded visual values, zero primitive-utility usage (SC-001)
-- [ ] T026 [P] Walk [quickstart §3–§5](quickstart.md): Storybook mode switch (SC-007), rebrand test with tokens-only diff (SC-004), 3-token Figma traceability spot-check against `specs/001-foundation-tooling/figma-extraction.md` (SC-006); revert experiment edits
-- [ ] T027 [P] Update `README.md` (setup, command set, consuming `faster-ui` + `faster-ui/styles.css`, dark-mode note) and `CLAUDE.md` (token architecture refinement per [research R-3](research.md); real script list replaces "once configured" placeholders)
+- [X] T024 Run the full fresh-clone gate per [quickstart §1](quickstart.md): `npm ci` (or rm -rf node_modules && npm install), then `npm run lint`, `npm run typecheck`, `npm test`, `npm run cy:ct`, `npm run build-storybook`, `npm run build` — all exit 0 with no undocumented steps (SC-002, SC-003)
+- [X] T025 [P] Run `/token-audit` over `src/` — zero hardcoded visual values, zero primitive-utility usage (SC-001)
+- [X] T026 [P] Walk [quickstart §3–§5](quickstart.md): Storybook mode switch (SC-007), rebrand test with tokens-only diff (SC-004), 3-token Figma traceability spot-check against `specs/001-foundation-tooling/figma-extraction.md` (SC-006); revert experiment edits
+- [X] T027 [P] Update `README.md` (setup, command set, consuming `faster-ui` + `faster-ui/styles.css`, dark-mode note) and `CLAUDE.md` (token architecture refinement per [research R-3](research.md); real script list replaces "once configured" placeholders)
 
 ---
 
