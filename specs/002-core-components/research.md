@@ -288,3 +288,34 @@ each full grid at a glance.
 
 **Rationale**: The set differs from Basic only in slotted content; a prop
 would duplicate what `children`/`footer` already express (Principle VII).
+
+## Addendum: T005 platform de-risk findings (2026-08-19)
+
+Probe method: a scratch component carrying every risky utility was built
+through the real library pipeline (`vite build` + Tailwind scanner), and the
+generated rules were verified in `dist/styles.css`; jsdom was probed directly
+via node. Findings:
+
+- **(a) `fui:animate-spin` — PASS.** Generates with the prefix; Tailwind's
+  `--animate-*` defaults survived the foundation's `@theme` reset as expected
+  (R-3 holds).
+- **(b) `fui:backdrop:bg-overlay` — PASS.** Emits
+  `.fui\:backdrop\:bg-overlay::backdrop { background-color: var(--fui-overlay) }`
+  — the scrim needs no extra DOM node (R-8 holds).
+- **(c) Arbitrary-property appearance resets — PASS.**
+  `fui:[appearance:textfield]` and the
+  `fui:[&::-webkit-inner/outer-spin-button]:appearance-none` variants all
+  generate prefixed (R-6 holds).
+- **(d) jsdom `<dialog>` — FAIL, shim applied.** jsdom 26.1 (under
+  jest-environment-jsdom 30.4) defines `HTMLDialogElement` but implements
+  none of `show`/`showModal`/`close`. Per the R-10 fallback, `jest.setup.ts`
+  now carries the minimal method shim (open-flag flip + `close` event
+  dispatch); real modal behavior stays Cypress-owned.
+- **Bonus probes (all PASS)**: `fui:open:flex` (targets `[open]` — safe way
+  to lay out the panel without overriding the closed dialog's UA
+  `display:none`), `fui:not-focus-within:hover:*` (explicit hover/focus
+  precedence on the Input wrapper), fractional spacing steps used by the
+  matrices (`py-1.75`, `p-2.75`, `min-w-26.5`, `size-4.5`, …) all compile to
+  `calc(var(--fui-spacing-unit) * n)`, and `fui:border-solid`/`fui:outline-solid`
+  generate — required because the foundation deliberately ships no preflight,
+  so components must set border/outline *style* themselves.
