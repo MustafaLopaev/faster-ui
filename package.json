@@ -60,6 +60,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/postbuild.mjs",
     "lint": "oxlint --max-warnings=0",
+    "lint:workflows": "node scripts/check-workflows.mjs",
     "typecheck": "tsc -b",
     "test": "jest --selectProjects unit",
     "test:watch": "jest --selectProjects unit --watch",
