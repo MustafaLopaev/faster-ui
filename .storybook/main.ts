@@ -10,7 +10,16 @@ const config: StorybookConfig = {
     if (viteConfig.build) viteConfig.build.lib = false
     viteConfig.plugins = (viteConfig.plugins ?? [])
       .flat()
-      .filter((p) => !(p && typeof p === 'object' && 'name' in p && p.name === 'vite:dts'))
+      .filter(
+        (p) =>
+          !(
+            p &&
+            typeof p === 'object' &&
+            'name' in p &&
+            // 'vite:dts' through vite-plugin-dts v4; 'unplugin-dts' from v5
+            (p.name === 'vite:dts' || p.name === 'unplugin-dts')
+          ),
+      )
     return viteConfig
   },
 }
