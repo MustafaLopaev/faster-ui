@@ -54,6 +54,12 @@
   },
   "ignorePatterns": [
     "dist",
+    // Consumer fixtures are throwaway APPLICATIONS that exercise the published
+    // tarball. They are deliberately written the way a consumer writes code,
+    // not the way this library does; linting them with the library's rules
+    // reports style opinions about someone else's project.
+    "test/consumers",
+    "visual/current",
     "storybook-static",
     "coverage",
     "node_modules"

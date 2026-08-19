@@ -1,0 +1,19 @@
+{
+  "name": "fui-consumer-vite-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Consumer fixture: can a bundler consume the published ESM entry and stylesheet? NOT a workspace — installed against the packed tarball at check time.",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.0.5",
+    "typescript": "6.0.3",
+    "vite": "8.2.1"
+  }
+}

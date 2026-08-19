@@ -60,15 +60,23 @@ let pass = 0
 
 ## Scenario 2 — The consumer matrix catches a broken package
 
-**Break it** — reorder the `types` condition in `package.json#exports` so it no longer comes first:
+**Break it** — point the `types` condition at a path that does not exist:
 
 ```json
-{ ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" } }
+{ ".": { "types": "./dist/types/index.d.ts", "import": "./dist/index.js" } }
 ```
 
-**Expect**: `attw --pack` fails naming the misordered condition, and `ts-resolution` fails under `node16`. The existing tarball audit in `ci.yml` **still passes** — it checks that files exist, which they do. That contrast is the reason this gate exists.
+**Expect**: `attw --pack` fails *(verified)*. `ts-resolution` still passes, and that is correct — TypeScript falls back to the `.d.ts` sitting beside `index.js`. attw is the stricter authority on resolution, which is why both checks exist rather than one.
 
-**Second break** — remove the `styles.css` import from the Next.js fixture's page. Expect the build to succeed and the page to render unstyled. This confirms the fixture exercises a real consumer step: `dist/index.js` contains no CSS import *(verified)*, so the import is required, not incidental.
+> An earlier draft asked for the `types` condition to be *reordered* after `import`. Verified: both checks still pass, because the sibling-`.d.ts` rule finds the declarations regardless of condition order. For this package layout the reordering is genuinely harmless, so it proves nothing. See [findings.md](./findings.md#f-6--quickstart-scenario-2s-types-reordering-break-is-a-no-op-here).
+
+**Second break** — drop `"./styles.css"` from `package.json#exports`:
+
+**Expect**: the `vite-app` build fails with *"./styles.css is not exported"*, while the existing tarball audit in `ci.yml` **still passes** — the file is in the tarball, it is simply unreachable *(both verified)*. That contrast is the reason this gate exists.
+
+**Third break** — remove the `styles.css` import from the Next.js fixture's layout. **Expect**: the build succeeds and the headless load fails with *"@mlopaev/faster-ui/styles.css did not reach the page"* *(verified)*. The assertion reads the `--fui-surface-page` custom property, not a rendered colour: an unstyled `<button>` still has the UA's `buttonface` background, so a colour-based check passes with no stylesheet at all ([findings.md F-7](./findings.md#f-7--a-stylesheet-reached-the-page-assertion-needs-a-token-not-a-colour)).
+
+**Also verified**: the package ships no `'use client'` directive, so the fixture's page carries one. Remove it and `next build` fails with *"You're importing a component that needs `useState`"* — a second real consumer step, currently undocumented in README.md ([findings.md F-5](./findings.md#f-5--the-package-ships-no-use-client-directive)).
 
 ---
 
@@ -90,15 +98,19 @@ npm run test:a11y
 
 ## Scenario 4 — The surface record blocks a silent API change
 
-**Break it** — add a required prop to `ButtonBaseProps`:
+**Break it** — add a prop to the **exported** `TextButtonProps`:
 
 ```ts
-tone: 'quiet' | 'loud'   // required, not optional
+tone?: 'quiet' | 'loud'
 ```
 
-**Expect**: `npm run api:check` fails with a diff against `etc/faster-ui.api.md`. Run `npm run api:report`, inspect the diff, commit it — now the change is deliberate and recorded, which is the entire mechanism.
+**Expect**: `npm run api:check` fails — *"The public surface has changed and etc/faster-ui.api.md does not record it"* *(verified)*. Run `npm run api:report`, inspect the diff, commit it — now the change is deliberate and recorded, which is the entire mechanism.
 
-**Expected known warning**: `ae-forgotten-export` for `ButtonBaseProps` *(verified)*. This is real and pre-existing — consumers cannot name the base type. It stays visible; fixing it changes the public API, which this feature's Out of Scope forbids.
+> Note a required prop on `ButtonBaseProps`, as an earlier draft suggested, will not compile: the stories and specs that render `<Button>` without it fail `tsc -b` first. Use an optional prop on an exported interface to exercise this gate.
+
+**Then the half that matters more** — add the same optional prop to the **unexported** `ButtonBaseProps` and re-run. **`api:check` passes** *(verified)*. `size` and `loading` live on that base type, so they sit outside the recorded contract entirely. This is not a flaw in the gate's implementation — it is the `ae-forgotten-export` finding, showing its real cost.
+
+**Expected known warning**: `ae-forgotten-export` for `ButtonBaseProps`, written *into* `etc/faster-ui.api.md` so it is re-read on every surface change *(verified)*. Fixing it changes the public API, which this feature's Out of Scope forbids — see [findings.md F-1](./findings.md#f-1--buttonbaseprops-is-not-exported-and-the-surface-record-is-blind-to-it).
 
 ---
 
