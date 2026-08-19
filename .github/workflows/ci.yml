@@ -86,7 +86,7 @@ jobs:
           CYPRESS_INSTALL_BINARY: '0'
       # Coverage thresholds live in jest.config.ts and fail the run on their own.
       - run: npm run test:coverage
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage
@@ -108,7 +108,7 @@ jobs:
       # Restored BEFORE npm ci so the postinstall binary download becomes a no-op on a hit;
       # a cold cache just downloads again — duration changes, the verdict cannot (FR-004).
       - name: Restore Cypress binary cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
@@ -217,7 +217,7 @@ jobs:
       # browser stack — research R-1), so this job needs the binary like the
       # `cypress` and `a11y` jobs do.
       - name: Restore Cypress binary cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
@@ -248,7 +248,7 @@ jobs:
       # Restored BEFORE npm ci so the postinstall binary download is a no-op on
       # a hit — exactly as the `cypress` job does.
       - name: Restore Cypress binary cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}

@@ -71,7 +71,7 @@ jobs:
         id: cypress-version
         run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/cypress'].version")" >> "$GITHUB_OUTPUT"
       - name: Restore Cypress binary cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
@@ -81,7 +81,7 @@ jobs:
       # before:run hook, so a server started in the config is always too late).
       - run: npm run build-storybook
       - run: npm run visual:capture
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: visual-current
           path: visual/current/
@@ -104,7 +104,7 @@ jobs:
       - run: npm ci
         env:
           CYPRESS_INSTALL_BINARY: '0'
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: visual-current
           path: visual/current
@@ -120,7 +120,7 @@ jobs:
           exit $status
       # Diffs and the manifest are the reviewable evidence — uploaded even when
       # the step above failed, which is exactly when they are wanted.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: visual-diff
@@ -150,11 +150,11 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: visual-current
           path: visual/current
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: visual-diff
           path: visual
@@ -171,6 +171,7 @@ jobs:
           use_sticky_comment: true
           claude_args: |
             --model claude-opus-5
+            --max-turns 30
             --allowedTools "Read,Glob,Bash(cat visual/report.json),mcp__github_comment__update_claude_comment"
             --json-schema '{"type":"array","items":{"type":"object","required":["cell","verdict","defect","confidence"],"additionalProperties":false,"properties":{"cell":{"type":"string","minLength":1},"verdict":{"type":"string","enum":["PASS","WARN","FAIL"]},"defect":{"type":"string"},"confidence":{"type":"string","enum":["high","low"]}}}}'
           prompt: |
@@ -232,7 +233,7 @@ jobs:
         id: cypress-version
         run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/cypress'].version")" >> "$GITHUB_OUTPUT"
       - name: Restore Cypress binary cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
@@ -248,7 +249,7 @@ jobs:
         run: node scripts/visual-batch-judge.mjs
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: nightly-visual
@@ -279,7 +280,7 @@ jobs:
         id: cypress-version
         run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/cypress'].version")" >> "$GITHUB_OUTPUT"
       - name: Restore Cypress binary cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}

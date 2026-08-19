@@ -163,3 +163,26 @@ Findings F-9 in `specs/004-quality-automation/findings.md`.
 Piping is not in the allowed command set (`Bash(git diff:*)` matches a command
 that *starts with* `git diff`, so `git diff … | head` is denied), and dumping a
 10,000-line diff in one turn exhausts the budget before anything is judged.
+
+## Review mode — demo by default
+
+`review.yml` reads the `REVIEW_MODE` repository variable. **Unset means `demo`.**
+
+| | `demo` (default) | `full` |
+| --- | --- | --- |
+| Jobs that run | `constitution-review` only | all four |
+| Model | Haiku 4.5 | Opus 5 |
+| Turn cap | 6 | 40 (25 for the others) |
+| Scope | exactly ONE changed source file, named in the prompt | the whole change |
+| Typical cost | cents | $1–6 on a large change |
+
+To opt into full reviews:
+
+```bash
+gh variable set REVIEW_MODE --body full
+```
+
+Demo is the default so the cost of a full review is always a deliberate opt-in
+(findings.md F-9). Every model-driven job also carries a `--max-turns` cap in
+both modes — not a substitute for a well-scoped prompt, but a bound on the
+damage when the prompt is wrong.
