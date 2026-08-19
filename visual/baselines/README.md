@@ -24,6 +24,14 @@ open the pull request if any cell drifted** on the unchanged commit. An unstable
 baseline set makes every later visual result meaningless, so it is refused
 rather than committed (SC-006).
 
+## Until this directory is populated
+
+`visual-compare` reports **cold start**: it says no baseline set exists, exits 0,
+and skips judgment. It does not claim a pass — nothing was established — and it
+does not fail, because a failure it cannot substantiate would block every pull
+request until someone muted the check. The same flag skips the nightly Batch
+sweep.
+
 ## Reading a filename
 
 ```
