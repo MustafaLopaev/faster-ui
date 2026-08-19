@@ -17,6 +17,16 @@ file has no section for the version being released.
 
 ## [Unreleased]
 
+### Added
+
+- `ButtonVariant`, `ButtonTone`, `IconOnlyButtonVariant` and `InputState` are
+  now exported. Each is a const object *and* the union type derived from it, so
+  `ButtonVariant.primary` works as a value and `ButtonVariant` as a type.
+- `ButtonSize`, `InputSize` and `DialogSize` gain the same treatment: they were
+  type-only exports and are now value exports too. Existing
+  `import type { ButtonSize }` usage is unaffected — the union type is still
+  assignable from the same string literals.
+
 ## [0.1.0] - 2026-08-19
 
 The first published release: Button, Input and Dialog on a Figma-extracted

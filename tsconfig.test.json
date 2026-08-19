@@ -29,6 +29,9 @@
     "src/**/*.test.tsx",
     "src/**/*.stories.tsx",
     "jest.setup.ts",
-    ".storybook/preview.tsx"
-  ]
+    ".storybook/preview.tsx",
+    "visual/**/*.stories.tsx",
+    "visual/fixtures/*.ts"
+  ],
+  "exclude": ["test/consumers/**", "visual/*.cy.ts", "visual/matrix.ts"]
 }

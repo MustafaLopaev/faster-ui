@@ -1,0 +1,81 @@
+# Scheduled deep audit (004 C5, contract: contracts/scheduled-agents.md).
+#
+# Runs the existing production-audit skill against `main` once a week and opens
+# an issue. Never blocks anything, never writes code.
+#
+# THE DIFF IS THE PRODUCT, NOT THE FINDINGS (FR-035). A standing audit that
+# reports the same twelve findings every week is ignored by week three. What is
+# actionable is what CHANGED: a metric that moved toward a limit it has not yet
+# crossed. Every limit below already fails on breach somewhere else — reporting
+# the approach is this job's only reason to exist.
+name: Audit
+
+on:
+  schedule:
+    # Mondays, off the hour — GitHub's scheduler queues heavily on it.
+    - cron: '41 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+
+      # Measured facts first, so the model reports numbers rather than
+      # estimating them. Every one of these has an enforced limit elsewhere.
+      - name: Measure the tracked drift metrics
+        id: metrics
+        run: |
+          set -euo pipefail
+          npm run build
+          {
+            echo "## Tracked metrics — $(date -u +%Y-%m-%d)"
+            echo
+            echo "| Metric | Value | Limit | Enforced by |"
+            echo "| ------ | ----- | ----- | ----------- |"
+            for f in index.js styles.css index.d.ts a11y.css; do
+              size=$(stat -c%s "dist/$f")
+              echo "| dist/$f | ${size} B | see scripts/postbuild.mjs | scripts/postbuild.mjs |"
+            done
+            baselines=$(du -sb visual/baselines 2>/dev/null | cut -f1 || echo 0)
+            echo "| visual baselines | ${baselines} B | 12582912 B | SC-011, scripts/visual-accept.mjs |"
+            echo "| baseline cells | $(ls visual/baselines 2>/dev/null | wc -l) | — | visual/matrix.ts |"
+            outdated=$(npm outdated --json 2>/dev/null | node -p "Object.keys(JSON.parse(require('fs').readFileSync(0,'utf8')||'{}')).length" || echo 0)
+            echo "| outdated dependencies | ${outdated} | — | Dependabot |"
+          } > metrics.md
+          cat metrics.md
+
+      - uses: ./.github/actions/claude-guard
+        id: guard
+        with:
+          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - if: steps.guard.outputs.ok == 'true'
+        run: node scripts/weekly-audit.mjs
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weekly-audit
+          path: |
+            metrics.md
+            audit-report.md
+          retention-days: 90
