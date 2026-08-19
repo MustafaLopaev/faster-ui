@@ -44,12 +44,54 @@ describe('the built module in a browserless environment', () => {
 
   it('exposes exactly the three documented components', async () => {
     const mod = await importBuiltEntry()
-    const components = Object.keys(mod)
+    for (const name of ['Button', 'Dialog', 'Input']) {
+      expect(typeof mod[name]).toBe('object') // forwardRef exotic component
+    }
+  })
+
+  /**
+   * The prop unions ship as const objects too (`ButtonVariant.primary`), so the
+   * runtime surface is larger than the component list. It is pinned here, and in
+   * `etc/faster-ui.api.md`, because an accidental export is invisible otherwise:
+   * `dist/index.d.ts` records types, this records what actually exists at runtime.
+   */
+  it('exposes exactly the documented runtime surface, and nothing else', async () => {
+    const mod = await importBuiltEntry()
+    const exported = Object.keys(mod)
       .filter((key) => key !== 'default' && key !== '__esModule')
       .toSorted()
-    expect(components).toEqual(['Button', 'Dialog', 'Input'])
-    for (const name of components) {
-      expect(typeof mod[name]).toBe('object') // forwardRef exotic component
+    expect(exported).toEqual([
+      'Button',
+      'ButtonSize',
+      'ButtonTone',
+      'ButtonVariant',
+      'Dialog',
+      'DialogSize',
+      'IconOnlyButtonVariant',
+      'Input',
+      'InputSize',
+      'InputState',
+    ])
+  })
+
+  it('ships the prop unions as plain frozen-shape lookup objects', async () => {
+    const mod = await importBuiltEntry()
+    expect(mod.ButtonVariant).toEqual({
+      primary: 'primary',
+      outline: 'outline',
+      ghost: 'ghost',
+      link: 'link',
+    })
+    expect(mod.ButtonSize).toEqual({ sm: 'sm', md: 'md', lg: 'lg' })
+    expect(mod.InputSize).toEqual({ sm: 'sm', md: 'md', lg: 'lg' })
+    expect(mod.DialogSize).toEqual({ sm: 'sm', md: 'md', lg: 'lg' })
+    // Every member's key IS its literal value: the object is a naming aid, not a
+    // mapping to learn, and `variant="primary"` stays valid for consumers.
+    const tables = [mod.ButtonVariant, mod.ButtonSize, mod.ButtonTone, mod.InputState] as Array<
+      Record<string, string>
+    >
+    for (const table of tables) {
+      for (const [key, value] of Object.entries(table)) expect(value).toBe(key)
     }
   })
 

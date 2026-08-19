@@ -43,6 +43,28 @@ function parse(file) {
 const lineOf = (node, source) =>
   source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1
 
+/**
+ * Strip the wrappers TypeScript allows around an object literal.
+ *
+ * `args: { … } as ButtonProps` and `meta = { … } satisfies Meta<typeof Button>`
+ * are both ordinary Storybook style, and both hide the object behind an
+ * expression node. Matching only a bare `ObjectLiteralExpression` made this gate
+ * report "no Playground story" for a file that plainly has one.
+ */
+function unwrap(node) {
+  let current = node
+  while (
+    current &&
+    (ts.isAsExpression(current) ||
+      ts.isSatisfiesExpression(current) ||
+      ts.isParenthesizedExpression(current) ||
+      ts.isTypeAssertionExpression(current))
+  ) {
+    current = current.expression
+  }
+  return current
+}
+
 /** `'aria-label'` and `size` both arrive here as plain strings. */
 function nameOf(member) {
   const n = member.name
@@ -153,33 +175,52 @@ function analyseComponent(name) {
   }
 
   // ── 2. What the Playground story exposes ──────────────────────────────────
+  //
+  // Controls are collected from the Playground story AND from `meta`, because
+  // meta-level `argTypes` apply to every story in the file — including
+  // Playground. Reading only the story would report a prop as unreachable when
+  // its control is simply declared once for the whole file.
   const controls = new Set()
   let playgroundLine = 1
+  let hasPlayground = false
+
+  const collectControls = (objectLike) => {
+    const object = unwrap(objectLike)
+    if (!object || !ts.isObjectLiteralExpression(object)) return
+    for (const entry of object.properties) {
+      if (!ts.isPropertyAssignment(entry)) continue
+      const key = entry.name.getText()
+      if (key !== 'args' && key !== 'argTypes') continue
+      const values = unwrap(entry.initializer)
+      if (!values || !ts.isObjectLiteralExpression(values)) continue
+      for (const control of values.properties) {
+        const controlName = nameOf(control) ?? control.name?.getText()
+        if (controlName) controls.add(controlName.replace(/^['"]|['"]$/g, ''))
+      }
+    }
+  }
+
   stories.forEachChild((node) => {
     if (!ts.isVariableStatement(node)) return
     for (const decl of node.declarationList.declarations) {
-      if (decl.name.getText() !== 'Playground' || !decl.initializer) continue
+      if (!decl.initializer) continue
+      const declName = decl.name.getText()
+      if (declName === 'meta') collectControls(decl.initializer)
+      if (declName !== 'Playground') continue
+      hasPlayground = true
       playgroundLine = lineOf(decl, stories)
-      if (!ts.isObjectLiteralExpression(decl.initializer)) continue
-      for (const entry of decl.initializer.properties) {
-        if (!ts.isPropertyAssignment(entry)) continue
-        const key = entry.name.getText()
-        if (key !== 'args' && key !== 'argTypes') continue
-        if (!ts.isObjectLiteralExpression(entry.initializer)) continue
-        for (const control of entry.initializer.properties) {
-          const controlName = nameOf(control) ?? control.name?.getText()
-          if (controlName) controls.add(controlName.replace(/^['"]|['"]$/g, ''))
-        }
-      }
+      collectControls(decl.initializer)
     }
   })
 
-  if (controls.size === 0) {
+  if (!hasPlayground || controls.size === 0) {
     report(
       storiesFile,
       playgroundLine,
       'missing-playground',
-      `${name} has no Playground story with args/argTypes. Principle V requires one — it is how a reader tries every prop without writing code.`,
+      hasPlayground
+        ? `${name}'s Playground story exposes no controls, and neither does \`meta\`. Principle V requires a Playground that reaches every prop.`
+        : `${name} has no Playground story. Principle V requires one — it is how a reader tries every prop without writing code.`,
     )
   }
 
