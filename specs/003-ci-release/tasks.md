@@ -37,8 +37,8 @@
 
 **⚠️ CRITICAL**: No story can be *verified* until this phase is complete.
 
-- [ ] T004 Install and authenticate the GitHub CLI: `brew install gh && gh auth login` (verified not installed — research R-8; operator completes the browser auth)
-- [ ] T005 Create the private repo and push (quickstart scenario 2): `gh repo create faster-ui --private --source . --remote origin`, then `git push -u origin main 001-foundation-tooling 002-core-components 003-ci-release`; confirm the repo is private and `main` is the default branch (FR-014)
+- [X] T004 Install and authenticate the GitHub CLI: `brew install gh && gh auth login` (verified not installed — research R-8; operator completes the browser auth)
+- [X] T005 Create the private repo and push (quickstart scenario 2): `gh repo create faster-ui --private --source . --remote origin`, then `git push -u origin main 001-foundation-tooling 002-core-components 003-ci-release`; confirm the repo is private and `main` is the default branch (FR-014)
 
 **Checkpoint**: Repository exists on GitHub — workflow runs now have somewhere to happen.
 
@@ -64,7 +64,7 @@
 
 **Independent Test**: Tag green `main` with `v0.1.0` → package installable at 0.1.0 unauthenticated; a tag on a red commit publishes nothing.
 
-- [ ] T009 [US2] Configure publish credentials: operator creates a granular npm automation token scoped to publish `@mlopaev/faster-ui` (npmjs.com → Access Tokens; claim the `@mlopaev` scope if not yet claimed), then `gh secret set NPM_TOKEN` (FR-012; quickstart prerequisites)
+- [X] T009 [US2] Configure publish credentials: operator creates a granular npm automation token scoped to publish `@mlopaev/faster-ui` (npmjs.com → Access Tokens; claim the `@mlopaev` scope if not yet claimed), then `gh secret set NPM_TOKEN` (FR-012; quickstart prerequisites)
 - [X] T010 [US2] Author `.github/workflows/release.yml` per [contracts/release-workflow.md](./contracts/release-workflow.md): trigger `push` tags `v*`; `permissions: contents: read`; job `quality` → `uses: ./.github/workflows/ci.yml`; job `publish` `needs: quality` — checkout → setup-node (`node-version-file: .nvmrc`, `registry-url: https://registry.npmjs.org`) → `npm ci` → `npm run build` → version-match step failing with an explicit message when `${GITHUB_REF_NAME#v}` ≠ `package.json` version → `npm publish` with `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` (FR-007/008/009/010)
 - [ ] T011 [US2] Land the feature: merge the PR from T007 into `main` (include T010's commit in it), confirm the post-merge `main` push run is fully green — the tagging baseline (FR-014 evidence begins)
 - [ ] T012 [US2] Release for real (quickstart scenario 6): from green `main`, `git tag v0.1.0 && git push origin v0.1.0`, then `gh run watch` — quality suite green on the tagged commit → version check passes → publish succeeds (SC-004)
