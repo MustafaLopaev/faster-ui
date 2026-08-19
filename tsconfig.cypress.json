@@ -23,5 +23,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/**/*.cy.tsx", "cypress/**/*.ts"]
+  "include": ["src/**/*.cy.tsx", "cypress/**/*.ts", "visual/**/*.ts"]
 }
