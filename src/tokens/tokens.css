@@ -1,0 +1,363 @@
+/**
+ * Faster UI design tokens — THE single source of every visual value.
+ *
+ * Source of truth: TapTap Design System, file `taptap-design-copy`
+ * (7OfpQVe2pYpE9MF5pQeXhH). Full extraction record with per-state evidence:
+ * specs/001-foundation-tooling/figma-extraction.md
+ *
+ * Structure (contracts/token-contract.md):
+ *   1. PRIMITIVES  — raw values on :root, hand-prefixed --fui-*. Not in @theme,
+ *      so NO utilities are generated from them: components cannot reach them.
+ *   2. SEMANTICS   — purpose-named refs to primitives; colors re-declared under
+ *      .dark (mode contract: `dark` class on the document root, nothing else).
+ *   3. BRIDGE      — @theme inline exposes semantics to Tailwind, generating the
+ *      only color/radius utilities that exist (all `fui:`-prefixed).
+ */
+
+/* Granular import — deliberately skips preflight.css: the shipped stylesheet
+   must never restyle host elements (package-contract guarantee 4). Components
+   own every property they need; no global resets are assumed. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme) prefix(fui);
+@import "tailwindcss/utilities.css" layer(utilities) prefix(fui);
+
+@theme {
+  /* Wipe Tailwind defaults: no off-system color or radius utility may exist. */
+  --color-*: initial;
+  --radius-*: initial;
+}
+
+/* ── 1. PRIMITIVES ──────────────────────────────────────────────────────────
+   Raw values, each defined exactly once, each traceable to a Figma style
+   (paint/text/effect style name) or carrying a deviation rationale. */
+:root {
+  /* Black & White (Figma paint styles "Black & White/*") */
+  --fui-white: #ffffff; /* Black & White/White */
+  --fui-black: #000000; /* Black & White/Black */
+
+  /* Neutral scale (Figma "Neutral/50..700") */
+  --fui-neutral-50: #fafafa; /* Neutral/50 */
+  --fui-neutral-100: #f5f5f5; /* Neutral/100 */
+  --fui-neutral-200: #eeeeee; /* Neutral/200 */
+  --fui-neutral-300: #e1e1e1; /* Neutral/300 */
+  --fui-neutral-400: #cacaca; /* Neutral/400 */
+  --fui-neutral-500: #8e8e8e; /* Neutral/500 */
+  --fui-neutral-600: #4b4b4b; /* Neutral/600 */
+  --fui-neutral-700: #1f1f1f; /* Neutral/700 */
+
+  /* Primary — TapTap teal (Figma "Primary/50..700") */
+  --fui-primary-50: #f9ffff; /* Primary/50 */
+  --fui-primary-100: #eefcfc; /* Primary/100 */
+  --fui-primary-200: #dff7f7; /* Primary/200 */
+  --fui-primary-300: #b0ebec; /* Primary/300 */
+  --fui-primary-400: #7ddde1; /* Primary/400 */
+  --fui-primary-500: #47cfd6; /* Primary/500 */
+  --fui-primary-600: #15c5ce; /* Primary/600 */
+  --fui-primary-700: #00abb6; /* Primary/700 */
+
+  /* Auxiliary — TapTap orange (Figma "Auxiliary/50..700") */
+  --fui-auxiliary-50: #fffcfc; /* Auxiliary/50 */
+  --fui-auxiliary-100: #fff6f3; /* Auxiliary/100 */
+  --fui-auxiliary-200: #fff2ee; /* Auxiliary/200 */
+  --fui-auxiliary-300: #ffe1d6; /* Auxiliary/300 */
+  --fui-auxiliary-400: #ffc8b6; /* Auxiliary/400 */
+  --fui-auxiliary-500: #ffa487; /* Auxiliary/500 */
+  --fui-auxiliary-600: #ff8156; /* Auxiliary/600 */
+  --fui-auxiliary-700: #fe632f; /* Auxiliary/700 */
+
+  /* Danger (Figma "Danger/50..700") */
+  --fui-danger-50: #fffbfb; /* Danger/50 */
+  --fui-danger-100: #fef2f2; /* Danger/100 */
+  --fui-danger-200: #ffebee; /* Danger/200 */
+  --fui-danger-300: #ffccd2; /* Danger/300 */
+  --fui-danger-400: #f49898; /* Danger/400 */
+  --fui-danger-500: #eb6f70; /* Danger/500 */
+  --fui-danger-600: #f64c4c; /* Danger/600 */
+  --fui-danger-700: #ec2d30; /* Danger/700 */
+
+  /* Warning (Figma "Warning/50..700") */
+  --fui-warning-50: #fffdfa; /* Warning/50 */
+  --fui-warning-100: #fff9ee; /* Warning/100 */
+  --fui-warning-200: #fff7e1; /* Warning/200 */
+  --fui-warning-300: #ffeab3; /* Warning/300 */
+  --fui-warning-400: #ffdd82; /* Warning/400 */
+  --fui-warning-500: #ffc62b; /* Warning/500 */
+  --fui-warning-600: #ffad0d; /* Warning/600 */
+  --fui-warning-700: #fe9b0e; /* Warning/700 */
+
+  /* Success (Figma "Success/50..700") */
+  --fui-success-50: #fbfefc; /* Success/50 */
+  --fui-success-100: #f2faf6; /* Success/100 */
+  --fui-success-200: #e5f5ec; /* Success/200 */
+  --fui-success-300: #c0e5d1; /* Success/300 */
+  --fui-success-400: #97d4b4; /* Success/400 */
+  --fui-success-500: #6bc497; /* Success/500 */
+  --fui-success-600: #47b881; /* Success/600 */
+  --fui-success-700: #0c9d61; /* Success/700 */
+
+  /* Info (Figma "Info/50..700") */
+  --fui-info-50: #f8fcff; /* Info/50 */
+  --fui-info-100: #f1f8ff; /* Info/100 */
+  --fui-info-200: #e4f2ff; /* Info/200 */
+  --fui-info-300: #bdddff; /* Info/300 */
+  --fui-info-400: #93c8ff; /* Info/400 */
+  --fui-info-500: #4ba1ff; /* Info/500 */
+  --fui-info-600: #3b82f6; /* Info/600 */
+  --fui-info-700: #3a70e2; /* Info/700 */
+
+  /* Dark-mode ink surfaces */
+  --fui-ink-900: #1d2127; /* Figma 基础色板/Neutral/7 (TapTap dark ink) */
+  --fui-ink-800: #262b33; /* DERIVED: one elevation step above ink-900; no Dark surface style readable in the file */
+
+  /* Alpha composites — light set (Figma "Light/*" library styles) */
+  --fui-black-a90: rgb(0 0 0 / 0.9); /* Light/Fill Color/Text/Primary (#000 @ 90%) */
+  --fui-black-a61: rgb(0 0 0 / 0.61); /* Light/Fill Color/Text/Secondary (#000 @ 61%) */
+  --fui-black-a30: rgb(0 0 0 / 0.3); /* Light|Dark/Background/Fill Color/Smoke/Default (#000 @ 30%, both modes) */
+  --fui-black-a8: rgb(0 0 0 / 0.08); /* Light/Stroke Color/Divider Stroke/Default (#000 @ 8%) */
+
+  /* Alpha composites — dark set (Figma "Dark/*" where readable, rest derived) */
+  --fui-white-a90: rgb(255 255 255 / 0.9); /* DERIVED: mirrors Light/Text/Primary alpha; no Dark/Fill Color/Text/Primary readable */
+  --fui-white-a79: rgb(255 255 255 / 0.79); /* Dark/Fill Color/Text/Secondary (#FFF @ 79%) */
+  --fui-white-a30: rgb(255 255 255 / 0.3); /* DERIVED: disabled/placeholder ink on dark; follows the white-alpha dark pattern */
+  --fui-white-a7: rgb(255 255 255 / 0.07); /* Dark/Stroke Color/Control Stroke/Default (#FFF @ 7%) */
+  --fui-white-a4: rgb(255 255 255 / 0.04); /* DERIVED: sunken fill on dark; follows the white-alpha dark pattern */
+
+  /* Radius (Figma component geometry: Button/Input radius 4; Dialog panel
+     corners re-verified per node at [4,4,4,4] on every set/size — the earlier
+     8px reading was the demo artboard frame, not the panel; --fui-radius-8
+     deleted with it, no consumer remains) */
+  --fui-radius-4: 0.25rem; /* 4px — Button + Input + Dialog panel corner radius */
+  --fui-radius-full: 999px; /* pill/circular shapes on doc pages */
+
+  /* Spacing base (Figma 4px grid — every observed component pad/gap is a multiple) */
+  --fui-spacing-unit: 0.25rem; /* 4px */
+
+  /* Typography (Figma text styles "Regular|Medium/<ramp>", family PingFang SC).
+     DEVIATION: PingFang SC ships only on Apple platforms — cross-platform
+     fallbacks appended; rem units for user font-size scaling (px noted). */
+  --fui-font-sans: 'PingFang SC', 'Helvetica Neue', 'Noto Sans SC', system-ui,
+    ui-sans-serif, sans-serif;
+  --fui-font-weight-regular: 400; /* Regular/* styles */
+  --fui-font-weight-medium: 500; /* Medium/* styles */
+  --fui-text-caption: 0.75rem; /* 12px — */
+  --fui-text-caption-lh: 1.125rem; /* 18px — Caption 12/18 */
+  --fui-text-body: 0.875rem; /* 14px — */
+  --fui-text-body-lh: 1.375rem; /* 22px — Body 14/22 */
+  --fui-text-subtitle: 1rem; /* 16px — */
+  --fui-text-subtitle-lh: 1.5rem; /* 24px — Subtitle 16/24 */
+  --fui-text-title: 1.125rem; /* 18px — */
+  --fui-text-title-lh: 1.625rem; /* 26px — Title 18/26 */
+  --fui-text-h3: 1.25rem; /* 20px — */
+  --fui-text-h3-lh: 1.75rem; /* 28px — H3 20/28 */
+  --fui-text-h2: 1.5rem; /* 24px — */
+  --fui-text-h2-lh: 2rem; /* 32px — H2 24/32 */
+  --fui-text-h1: 1.875rem; /* 30px — */
+  --fui-text-h1-lh: 2.375rem; /* 38px — H1 30/38 */
+
+  /* Elevation (Figma effect styles "Elevation/1..4") */
+  --fui-elevation-1: 0 2px 4px 0 rgb(0 0 0 / 0.04), 0 1px 1px 0 rgb(0 0 0 / 0.02); /* Elevation/1 */
+  --fui-elevation-2: 0 4px 10px 0 rgb(0 0 0 / 0.08), 0 1px 4px 0 rgb(0 0 0 / 0.04); /* Elevation/2 */
+  --fui-elevation-3: 0 8px 32px 0 rgb(0 0 0 / 0.08), 0 2px 20px 0 rgb(0 0 0 / 0.04); /* Elevation/3 */
+  --fui-elevation-4: 0 24px 60px 0 rgb(0 0 0 / 0.12), 0 8px 20px 0 rgb(0 0 0 / 0.06); /* Elevation/4 */
+}
+
+/* ── 2. SEMANTICS — mode-aware colors ───────────────────────────────────────
+   Purpose names → primitive refs only (never literals). Light = :root.
+   Per-state sources: figma-extraction.md §4 (Button/Input/Dialog variants). */
+:root {
+  /* Action — primary (Button "Primary" set: 600/500/700/300 + white label) */
+  --fui-action-primary: var(--fui-primary-600);
+  --fui-action-primary-hover: var(--fui-primary-500);
+  --fui-action-primary-active: var(--fui-primary-700);
+  --fui-action-primary-disabled: var(--fui-primary-300);
+
+  /* Action — danger (Button danger variants: same scale positions) */
+  --fui-action-danger: var(--fui-danger-600);
+  --fui-action-danger-hover: var(--fui-danger-500);
+  --fui-action-danger-active: var(--fui-danger-700);
+  --fui-action-danger-disabled: var(--fui-danger-300);
+
+  /* Label color on filled action surfaces (all filled Button variants) */
+  --fui-on-action: var(--fui-white);
+
+  /* Action — secondary/outline (Button "Outline" set) */
+  --fui-action-secondary-border: var(--fui-neutral-300);
+  --fui-action-secondary-border-hover: var(--fui-primary-500);
+  --fui-action-secondary-border-active: var(--fui-primary-700);
+  --fui-action-secondary-border-disabled: var(--fui-neutral-200);
+  --fui-action-secondary-text: var(--fui-neutral-600);
+  --fui-action-secondary-text-hover: var(--fui-primary-500);
+  --fui-action-secondary-text-active: var(--fui-primary-700);
+  --fui-action-secondary-text-disabled: var(--fui-neutral-400);
+
+  /* Feedback (status 600s per Figma status scales; error = Input error border) */
+  --fui-feedback-error: var(--fui-danger-600);
+  --fui-feedback-warning: var(--fui-warning-600);
+  --fui-feedback-success: var(--fui-success-600);
+  --fui-feedback-info: var(--fui-info-600);
+
+  /* Surfaces (Input/Dialog fills; sunken = Input disabled fill Neutral/50) */
+  --fui-surface-page: var(--fui-white);
+  --fui-surface-raised: var(--fui-white);
+  --fui-surface-sunken: var(--fui-neutral-50);
+  --fui-overlay: var(--fui-black-a30);
+
+  /* Text (Light/Fill Color/Text/*; placeholder/disabled from Input states) */
+  --fui-text-color-primary: var(--fui-black-a90);
+  --fui-text-color-secondary: var(--fui-black-a61);
+  --fui-text-color-placeholder: var(--fui-neutral-400);
+  --fui-text-color-disabled: var(--fui-neutral-400);
+
+  /* Border & focus (Input: default/disabled borders, focus = Primary/600) */
+  --fui-border-default: var(--fui-neutral-300);
+  --fui-border-subtle: var(--fui-black-a8);
+  --fui-border-disabled: var(--fui-neutral-200);
+  --fui-focus-ring: var(--fui-primary-600);
+
+  /* Action — ghost (Button "Ghost" sets: fill tint on hover/pressed only) */
+  --fui-action-ghost-hover: var(--fui-neutral-100); /* Neutral/100 — Ghost Hover fill */
+  --fui-action-ghost-active: var(--fui-neutral-300); /* Neutral/300 — Ghost Pressed fill */
+  --fui-action-ghost-danger-hover: var(--fui-danger-100); /* Danger/100 — Ghost danger Hover fill */
+  --fui-action-ghost-danger-active: var(--fui-danger-300); /* Danger/300 — Ghost danger Pressed fill */
+
+  /* Action — danger outline (Button "Outline" danger set: border = label, per state) */
+  --fui-action-danger-outline: var(--fui-danger-600); /* Danger/600 — Default */
+  --fui-action-danger-outline-hover: var(--fui-danger-500); /* Danger/500 — Hover */
+  --fui-action-danger-outline-active: var(--fui-danger-700); /* Danger/700 — Pressed */
+  --fui-action-danger-outline-disabled: var(--fui-danger-400); /* Danger/400 — Disabled */
+
+  /* Action — link disabled (Link set Disabled: Primary/400, deliberately
+     lighter than the filled disabled Primary/300) */
+  --fui-action-link-disabled: var(--fui-primary-400); /* Primary/400 — Link Disabled */
+
+  /* Action — clear affordance (Input "State 2" axis: circle-x fills) */
+  --fui-action-clear: var(--fui-neutral-400); /* Neutral/400 — rest */
+  --fui-action-clear-hover: var(--fui-neutral-500); /* Neutral/500 — Clear Hover */
+  --fui-action-clear-active: var(--fui-neutral-600); /* Neutral/600 — Clear Pressed */
+
+  /* Borders — component states beyond the foundation set */
+  --fui-border-hover: var(--fui-primary-500); /* Primary/500 — Input Hover border */
+  --fui-border-strong: var(--fui-neutral-200); /* Neutral/200 — Dialog divider hairlines */
+
+  /* Text & icons — control-level inks */
+  --fui-text-control: var(--fui-neutral-600); /* Neutral/600 — Input value, Dialog body */
+  --fui-text-heading: var(--fui-neutral-700); /* Neutral/700 — Dialog title */
+  --fui-text-placeholder-disabled: var(--fui-neutral-300); /* Neutral/300 — Input Disabled placeholder */
+  --fui-icon-muted: var(--fui-neutral-500); /* Neutral/500 — Dialog close icon; Input icon/affix/stepper adornments at rest */
+}
+
+/* Dark mode — `dark` class on the document root, nothing else (FR-013).
+   Action + feedback colors are NOT re-declared: no Dark/* counterparts exist
+   in the file; the light brand scales serve both modes (FR-013 fallback). */
+.dark {
+  --fui-surface-page: var(--fui-ink-900); /* derived pairing: TapTap dark ink */
+  --fui-surface-raised: var(--fui-ink-800); /* derived: elevation step above page */
+  --fui-surface-sunken: var(--fui-white-a4); /* derived */
+  --fui-overlay: var(--fui-black-a30); /* Figma Dark/Background/Smoke — same value, re-declared for explicitness */
+
+  --fui-text-color-primary: var(--fui-white-a90); /* derived: mirrors light alpha */
+  --fui-text-color-secondary: var(--fui-white-a79); /* Figma Dark/Fill Color/Text/Secondary */
+  --fui-text-color-placeholder: var(--fui-white-a30); /* derived */
+  --fui-text-color-disabled: var(--fui-white-a30); /* derived */
+
+  --fui-border-default: var(--fui-white-a7); /* Figma Dark/Stroke Color/Control Stroke */
+  --fui-border-subtle: var(--fui-white-a7); /* gap: no Dark divider style readable; nearest Figma dark stroke */
+  --fui-border-disabled: var(--fui-white-a7); /* gap: no Dark disabled stroke readable */
+
+  --fui-action-clear-active: var(--fui-white-a79); /* derived: pressed ink must lighten, not darken, on ink surfaces */
+  --fui-border-strong: var(--fui-white-a7); /* mirrors dark border-default (Figma Dark/Stroke Color/Control Stroke) */
+  --fui-text-control: var(--fui-white-a79); /* Figma Dark/Fill Color/Text/Secondary */
+  --fui-text-heading: var(--fui-white-a90); /* derived: mirrors dark text-color-primary */
+  --fui-text-placeholder-disabled: var(--fui-white-a30); /* derived: mirrors dark placeholder */
+}
+
+/* ── 3. BRIDGE — the only utility-generating token surface ──────────────────
+   `inline` keeps var() references live at use-site, so .dark re-declarations
+   above flip rendered colors at runtime with zero component involvement. */
+@theme inline {
+  /* Colors → fui:bg-*, fui:text-*, fui:border-*, fui:ring-* … */
+  --color-action-primary: var(--fui-action-primary);
+  --color-action-primary-hover: var(--fui-action-primary-hover);
+  --color-action-primary-active: var(--fui-action-primary-active);
+  --color-action-primary-disabled: var(--fui-action-primary-disabled);
+  --color-action-danger: var(--fui-action-danger);
+  --color-action-danger-hover: var(--fui-action-danger-hover);
+  --color-action-danger-active: var(--fui-action-danger-active);
+  --color-action-danger-disabled: var(--fui-action-danger-disabled);
+  --color-on-action: var(--fui-on-action);
+  --color-action-secondary-border: var(--fui-action-secondary-border);
+  --color-action-secondary-border-hover: var(--fui-action-secondary-border-hover);
+  --color-action-secondary-border-active: var(--fui-action-secondary-border-active);
+  --color-action-secondary-border-disabled: var(--fui-action-secondary-border-disabled);
+  --color-action-secondary-text: var(--fui-action-secondary-text);
+  --color-action-secondary-text-hover: var(--fui-action-secondary-text-hover);
+  --color-action-secondary-text-active: var(--fui-action-secondary-text-active);
+  --color-action-secondary-text-disabled: var(--fui-action-secondary-text-disabled);
+  --color-feedback-error: var(--fui-feedback-error);
+  --color-feedback-warning: var(--fui-feedback-warning);
+  --color-feedback-success: var(--fui-feedback-success);
+  --color-feedback-info: var(--fui-feedback-info);
+  --color-surface-page: var(--fui-surface-page);
+  --color-surface-raised: var(--fui-surface-raised);
+  --color-surface-sunken: var(--fui-surface-sunken);
+  --color-overlay: var(--fui-overlay);
+  --color-text-primary: var(--fui-text-color-primary);
+  --color-text-secondary: var(--fui-text-color-secondary);
+  --color-text-placeholder: var(--fui-text-color-placeholder);
+  --color-text-disabled: var(--fui-text-color-disabled);
+  --color-border-default: var(--fui-border-default);
+  --color-border-subtle: var(--fui-border-subtle);
+  --color-border-disabled: var(--fui-border-disabled);
+  --color-focus-ring: var(--fui-focus-ring);
+  --color-action-ghost-hover: var(--fui-action-ghost-hover);
+  --color-action-ghost-active: var(--fui-action-ghost-active);
+  --color-action-ghost-danger-hover: var(--fui-action-ghost-danger-hover);
+  --color-action-ghost-danger-active: var(--fui-action-ghost-danger-active);
+  --color-action-danger-outline: var(--fui-action-danger-outline);
+  --color-action-danger-outline-hover: var(--fui-action-danger-outline-hover);
+  --color-action-danger-outline-active: var(--fui-action-danger-outline-active);
+  --color-action-danger-outline-disabled: var(--fui-action-danger-outline-disabled);
+  --color-action-link-disabled: var(--fui-action-link-disabled);
+  --color-action-clear: var(--fui-action-clear);
+  --color-action-clear-hover: var(--fui-action-clear-hover);
+  --color-action-clear-active: var(--fui-action-clear-active);
+  --color-border-hover: var(--fui-border-hover);
+  --color-border-strong: var(--fui-border-strong);
+  --color-text-control: var(--fui-text-control);
+  --color-text-heading: var(--fui-text-heading);
+  --color-text-placeholder-disabled: var(--fui-text-placeholder-disabled);
+  --color-icon-muted: var(--fui-icon-muted);
+
+  /* Radius → fui:rounded-control, fui:rounded-surface, fui:rounded-full */
+  --radius-control: var(--fui-radius-4);
+  --radius-surface: var(--fui-radius-4);
+  --radius-full: var(--fui-radius-full);
+
+  /* Spacing base → fui:p-*, fui:gap-* … on the Figma 4px grid */
+  --spacing: var(--fui-spacing-unit);
+
+  /* Typography → fui:font-sans, fui:font-regular/medium, fui:text-<ramp> */
+  --font-sans: var(--fui-font-sans);
+  --font-weight-regular: var(--fui-font-weight-regular);
+  --font-weight-medium: var(--fui-font-weight-medium);
+  --text-caption: var(--fui-text-caption);
+  --text-caption--line-height: var(--fui-text-caption-lh);
+  --text-body: var(--fui-text-body);
+  --text-body--line-height: var(--fui-text-body-lh);
+  --text-subtitle: var(--fui-text-subtitle);
+  --text-subtitle--line-height: var(--fui-text-subtitle-lh);
+  --text-title: var(--fui-text-title);
+  --text-title--line-height: var(--fui-text-title-lh);
+  --text-h3: var(--fui-text-h3);
+  --text-h3--line-height: var(--fui-text-h3-lh);
+  --text-h2: var(--fui-text-h2);
+  --text-h2--line-height: var(--fui-text-h2-lh);
+  --text-h1: var(--fui-text-h1);
+  --text-h1--line-height: var(--fui-text-h1-lh);
+
+  /* Elevation → fui:shadow-elevation-1..4 */
+  --shadow-elevation-1: var(--fui-elevation-1);
+  --shadow-elevation-2: var(--fui-elevation-2);
+  --shadow-elevation-3: var(--fui-elevation-3);
+  --shadow-elevation-4: var(--fui-elevation-4);
+}

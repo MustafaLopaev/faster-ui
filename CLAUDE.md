@@ -1,8 +1,10 @@
 # Faster UI — Claude Code Guide
 
-Production-grade React component library (**Button**, **Input**, **Dialog**)
-for a design-system engineering task. Full brief: `docs/udc-requirements.md`.
-Design source: TapTap Design System Figma file (link in the brief).
+Production-grade React component library (**Button**, **Input**, **Dialog** —
+all three shipped, exported with their prop types from `src/index.ts`) for a
+design-system engineering task. Full brief: `docs/udc-requirements.md`.
+Design source: TapTap Design System Figma file (link in the brief); component
+usage and props tables live in `README.md`.
 
 ## Governing documents (read in this order)
 
@@ -30,37 +32,72 @@ This repo uses **spec-driven development** via GitHub spec-kit:
 - **Vite stays** (library mode for the build; also powers Storybook and
   Cypress CT). Jest runs standalone with its own transform because the brief
   mandates Jest over Vitest.
-- **Tailwind CSS v4**, CSS-first: tokens are CSS variables declared via
-  `@theme` in `src/tokens/tokens.css`. Layering: primitive → semantic;
-  components consume semantic tokens only.
+- **Tailwind CSS v4**, CSS-first, in `src/tokens/tokens.css` (the single
+  source of every visual value). Layering (refined during foundation, see
+  research R-3): **primitives** are private `--fui-*` custom properties on
+  `:root` (deliberately *not* in `@theme`, so no primitive utilities exist);
+  **semantics** are purpose-named refs re-declared under `.dark`; a
+  `@theme inline` bridge generates the only utilities components may use —
+  all `fui:`-prefixed (native `prefix(fui)`). Tailwind's default palette and
+  radii are wiped; preflight is deliberately not imported (the shipped
+  stylesheet must not restyle host elements).
 - **Dialog** wraps the native `<dialog>` element (top-layer, focus handling)
-  with a controlled React API.
+  with a controlled React API (`open`/`onClose`; it never closes itself —
+  Escape is intercepted via `onCancel` preventDefault).
 - **react / react-dom are peer dependencies.** Public API exports only
-  through `src/index.ts`.
+  through `src/index.ts`: `Button`/`Input`/`Dialog` + their prop types.
+- **No variant library**: styling is plain TS lookup maps of static `fui:*`
+  class strings joined by `src/lib/cn.ts` (002 research R-1). Button's
+  `iconOnly` constraints are a discriminated union — illegal combinations
+  are TS errors with a dev-only `console.warn` backstop.
+- **`radius-surface` is 4px** (002 correction: the Dialog panel's
+  node-verified corner radius; the foundation's 8px reading came from a demo
+  artboard, and the `--fui-radius-8` primitive was deleted with it).
+- **No preflight means components own every property**: border/outline
+  *style* must be set explicitly (`fui:border-solid`, `fui:outline-solid`),
+  headings/paragraphs need `fui:m-0`, buttons/inputs reset their UA styling.
+- **jsdom has no `<dialog>` methods** (jsdom 26): `jest.setup.ts` carries a
+  minimal `show/showModal/close` shim; real modal behavior (top layer,
+  inertness, trap) is asserted in Cypress only.
+- **Pseudo-state matrix cells** (hover/active) are asserted in Cypress with
+  `cypress-real-events` + computed-color checks against resolved token
+  values. The CDP mouse persists between tests — park it on a spacer
+  (`data-cy="park"`) before asserting rest-state colors.
 
 ## Layout
 
 ```text
-src/tokens/            tokens.css (@theme, primitive + semantic CSS vars)
+src/tokens/            tokens.css (primitives → semantics → @theme inline bridge)
 src/components/<Name>/ <Name>.tsx + .test.tsx (Jest) + .cy.tsx (Cypress)
                        + .stories.tsx + index.ts   (co-located contract)
-src/lib/               shared internals (cn, hooks)
+                       Button/, Input/, Dialog/ (+ Dialog.journey.cy.tsx —
+                       the US4 keyboard-only composition spec)
+src/lib/               shared internals: cn.ts (falsy-filtering class join)
 src/index.ts           the only public export surface
+src/main.tsx           dev playground (not part of the library build)
 ```
+
+TypeScript is split into four referenced projects (Jest and Cypress globals
+collide): `tsconfig.lib.json` (shipping code), `tsconfig.test.json`
+(*.test.tsx, stories, playground, .storybook/preview.tsx), `tsconfig.cypress.json`
+(*.cy.tsx + cypress/), `tsconfig.node.json` (config files).
 
 ## Commands
 
 ```bash
-npm run dev          # Vite dev server
-npm run build        # tsc -b && vite build (library)
-npm run lint         # oxlint
-npm test             # Jest (once configured)
-npm run cy:ct        # Cypress component tests (once configured)
-npm run storybook    # Storybook dev (once configured)
+npm run dev              # Vite dev playground (live token styling)
+npm run build            # tsc -b && vite build → dist/ (ESM + d.ts + styles.css)
+npm run lint             # oxlint
+npm run typecheck        # tsc -b (all four TS projects)
+npm test                 # Jest (test:watch for TDD)
+npm run cy:ct            # Cypress component tests headless (cy:open interactive)
+npm run storybook        # Storybook dev at :6006 (light/dark toolbar)
+npm run build-storybook  # static workbench build
 ```
 
-(Testing/Storybook scripts land with the foundation feature — check
-package.json for the current truth.)
+Quirk: in shells where `ELECTRON_RUN_AS_NODE=1` is exported (e.g. VS Code
+extension terminals), Cypress must run with it unset:
+`env -u ELECTRON_RUN_AS_NODE npm run cy:ct`.
 
 ## Conventions
 
