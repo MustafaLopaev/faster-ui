@@ -105,3 +105,73 @@ positive, and exactly the noise that gets a gate switched off.
 `*.a11y.cy.tsx` specs wraps (`fui:flex-wrap`) so it stays inside it. **A new
 a11y spec must keep its content on screen**, or it will report contrast failures
 that have nothing to do with the palette.
+
+---
+
+## F-5 — The package ships no `'use client'` directive
+
+**Severity**: a real consumer-facing constraint, currently undocumented.
+
+**Pinned in**: `test/consumers/next-app/app/page.tsx`, whose `'use client'` line
+carries the explanation; removing it fails `npm run test:consumers` at the
+Next.js build.
+
+`dist/index.js` contains no `'use client'` banner *(verified)*. All three
+components use hooks, so importing them into a React Server Component fails the
+build with *"You're importing a component that needs `useState`"*. The consumer
+must mark their own module `'use client'`.
+
+This is the same shape as the `styles.css` requirement — a real step a
+server-rendering consumer has to take — and, like it, the fixture now exercises
+it rather than assuming it. Unlike it, **README.md does not mention it**.
+
+**Fix**: either document the step in README.md alongside the stylesheet import,
+or add the directive to the build so the components carry it themselves. The
+second is the friendlier default for a component library and is a packaging
+change, so it belongs in its own commit.
+
+---
+
+## F-6 — Quickstart Scenario 2's `types`-reordering break is a no-op here
+
+**Severity**: documentation only; the gates are fine, the scenario was not.
+
+Scenario 2 asked for the `types` condition to be moved after `import` in
+`package.json#exports`, expecting `attw` and `ts-resolution` under `node16` to
+fail. Verified: **both still pass**, and correctly so. `dist/index.d.ts` sits
+beside `dist/index.js`, so TypeScript finds the declarations by the sibling-file
+rule regardless of condition order. For this package layout, the reordering is
+genuinely harmless.
+
+Two breaks that *do* fail, and are more representative of a real packaging
+regression, verified in their place:
+
+| Break | Caught by | The contrast |
+| ----- | --------- | ------------ |
+| `exports["."].types` pointing at a path that does not exist | **`attw` fails**; `ts-resolution` still passes (TypeScript falls back to the sibling `.d.ts`) | attw is the stricter authority — the reason both checks exist |
+| `"./styles.css"` dropped from `exports` | **`vite-app` build fails**: *"./styles.css is not exported"* | the existing 003 tarball audit **still passes** — the file is in the tarball, it is just unreachable. That is exactly the gap this gate was added to close |
+
+`attw` is configured through `.attw.json` with two deliberate settings, each
+documented in that file: the CSS subpaths are excluded (a stylesheet has no
+types, so attw's question does not apply), and the `esm-only` profile is
+selected (the package publishes ESM only, on purpose).
+
+---
+
+## F-7 — A "stylesheet reached the page" assertion needs a token, not a colour
+
+**Severity**: harness correctness; fixed, recorded so it is not reintroduced.
+
+The first version of the Next.js fixture's stylesheet assertion checked that a
+Button's background was not transparent. It passed with the stylesheet import
+removed entirely *(verified)* — an unstyled `<button>` still gets the UA's
+`buttonface` background. The check proved nothing.
+
+`test/consumers/next-app.cy.ts` now reads `--fui-surface-page` off the document
+element: a custom property exists only if the token layer loaded, and it is
+palette-independent, so re-theming cannot invalidate it. The font-family check
+alongside it reads the expected value **from the token** rather than naming a
+font, for the same reason.
+
+Generalisable: *an assertion whose subject has a browser default cannot prove
+that CSS arrived.*

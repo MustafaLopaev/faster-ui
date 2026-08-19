@@ -1,0 +1,25 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/@arethetypeswrong/cli/docs/config-schema.json",
+
+  "//": [
+    "attw asks one question: do the TYPES resolve, under every module-resolution",
+    "mode a consumer might use? Two answers are configured rather than fixed,",
+    "and both are deliberate:",
+    "",
+    "excludeEntrypoints — ./styles.css and ./a11y.css are stylesheets. They have",
+    "no declarations because a stylesheet has no types, and attw reports that as",
+    "'Resolution failed'. That is attw answering a question these entry points",
+    "do not pose. Their existence IS verified: the tarball audit in ci.yml checks",
+    "both files ship, and the vite-app fixture imports styles.css for real.",
+    "",
+    "profile esm-only — the package publishes ESM only, on purpose: React 19,",
+    "Vite library mode, `type: module`, one `import` condition. Under the default",
+    "strict profile attw warns that CJS consumers reach it by dynamic import",
+    "only, which is a description of the design rather than a defect. The",
+    "esm-only profile asserts exactly that intent, so a change that ACCIDENTALLY",
+    "made the package dual-format or broke ESM resolution still fails."
+  ],
+
+  "excludeEntrypoints": ["styles.css", "a11y.css"],
+  "profile": "esm-only"
+}

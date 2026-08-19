@@ -114,19 +114,19 @@ description: "Task list for the Quality Automation Layer"
 
 **Independent Test**: Quickstart Scenario 2 — a misordered `types` condition must fail `attw` and `ts-resolution` while the existing tarball audit still passes.
 
-- [ ] T036 [US2] Create `scripts/consumer-smoke.mjs`: `npm pack` once, then install the resulting tarball into each fixture and build it. Use the tarball path, **never** a workspace link or `npm link` — symlink resolution is the classic way to miss a broken `exports` map (research R-8).
-- [ ] T037 [P] [US2] Create `test/consumers/vite-app/` — its own `package.json` (not a workspace), a page importing all three components plus `styles.css`, and a Vite build.
-- [ ] T038 [P] [US2] Create `test/consumers/next-app/` — App Router fixture with its own pinned `package.json`, a page exercising all three components, and an **explicit `styles.css` import**. `dist/index.js` contains no CSS import *(verified)*, so this exercises a documented consumer step rather than a side effect.
-- [ ] T039 [US2] Add the headless load assertion to `test/consumers/next-app/`: build, start, load the page, capture the browser console, and fail on **any** error or warning. This is the only check exercising the RSC boundary, streaming SSR and stylesheet order together.
-- [ ] T040 [P] [US2] Create `test/consumers/ts-resolution/` — three tsconfigs typechecking the same import under `bundler`, `node16` and `nodenext`.
-- [ ] T041 [P] [US2] Add `publint` and `attw --pack` invocations against the packed tarball to `scripts/consumer-smoke.mjs`.
-- [ ] T042 [US2] Pin fixture framework versions in their own lockfiles so a framework major release is a deliberate upgrade, never a surprise red build.
-- [ ] T043 [US2] Add the `consumers` job to `.github/workflows/ci.yml`: `needs: build`, runs `npm run test:consumers`, with the `code` path filter.
-- [ ] T044 [US2] Confirm fixture installs never touch the root lockfile — run `npm run test:consumers` then `git diff --exit-code package-lock.json`. A framework in the library's own dependency graph violates FR-004.
-- [ ] T045 [US2] Run quickstart Scenario 2 first half: reorder the `types` condition in `package.json#exports` and confirm `attw` names the misordered condition, `ts-resolution` fails under `node16`, **and the existing tarball audit still passes** — that contrast is why this gate exists.
-- [ ] T046 [US2] Run quickstart Scenario 2 second half: remove the `styles.css` import from the Next.js fixture and confirm the page renders unstyled.
-- [ ] T047 [US2] Verify a duplicate React copy is not pulled into any fixture (`npm ls react` in each).
-- [ ] T048 [US2] Measure the added wall-clock and confirm the warm-cache full pipeline still completes within the 15-minute budget from 003 (SC-010).
+- [X] T036 [US2] Create `scripts/consumer-smoke.mjs`: `npm pack` once, then install the resulting tarball into each fixture and build it. Use the tarball path, **never** a workspace link or `npm link` — symlink resolution is the classic way to miss a broken `exports` map (research R-8).
+- [X] T037 [P] [US2] Create `test/consumers/vite-app/` — its own `package.json` (not a workspace), a page importing all three components plus `styles.css`, and a Vite build.
+- [X] T038 [P] [US2] Create `test/consumers/next-app/` — App Router fixture with its own pinned `package.json`, a page exercising all three components, and an **explicit `styles.css` import**. `dist/index.js` contains no CSS import *(verified)*, so this exercises a documented consumer step rather than a side effect.
+- [X] T039 [US2] Add the headless load assertion to `test/consumers/next-app/`: build, start, load the page, capture the browser console, and fail on **any** error or warning. This is the only check exercising the RSC boundary, streaming SSR and stylesheet order together.
+- [X] T040 [P] [US2] Create `test/consumers/ts-resolution/` — three tsconfigs typechecking the same import under `bundler`, `node16` and `nodenext`.
+- [X] T041 [P] [US2] Add `publint` and `attw --pack` invocations against the packed tarball to `scripts/consumer-smoke.mjs`.
+- [X] T042 [US2] Pin fixture framework versions in their own lockfiles so a framework major release is a deliberate upgrade, never a surprise red build.
+- [X] T043 [US2] Add the `consumers` job to `.github/workflows/ci.yml`: `needs: build`, runs `npm run test:consumers`, with the `code` path filter.
+- [X] T044 [US2] Confirm fixture installs never touch the root lockfile — run `npm run test:consumers` then `git diff --exit-code package-lock.json`. A framework in the library's own dependency graph violates FR-004.
+- [X] T045 [US2] Run quickstart Scenario 2 first half: reorder the `types` condition in `package.json#exports` and confirm `attw` names the misordered condition, `ts-resolution` fails under `node16`, **and the existing tarball audit still passes** — that contrast is why this gate exists.
+- [X] T046 [US2] Run quickstart Scenario 2 second half: remove the `styles.css` import from the Next.js fixture and confirm the page renders unstyled.
+- [X] T047 [US2] Verify a duplicate React copy is not pulled into any fixture (`npm ls react` in each).
+- [X] T048 [US2] Measure the added wall-clock and confirm the warm-cache full pipeline still completes within the 15-minute budget from 003 (SC-010).
 
 **Checkpoint**: Four required deterministic gates live. **Phase 1 of delivery complete — the credential is still not needed.**
 
