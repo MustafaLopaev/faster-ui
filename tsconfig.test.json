@@ -30,5 +30,6 @@
     "src/**/*.stories.tsx",
     "jest.setup.ts",
     ".storybook/preview.tsx"
-  ]
+  ],
+  "exclude": ["test/consumers/**", "visual/**"]
 }

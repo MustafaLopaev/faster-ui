@@ -1,0 +1,60 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+
+  // The subject is the BUILT declaration file, not source. api-extractor's
+  // canonical ordering is the point: the git diff on the report is signal,
+  // where a diff on dist/index.d.ts would be bundler noise (research R-7).
+  "mainEntryPointFilePath": "<projectFolder>/dist/index.d.ts",
+
+  "compiler": {
+    // Empty `types` array. The default configuration pulled @types/jsdom and
+    // @types/mdx into analysis and produced four warnings about declarations
+    // this package does not ship (verified).
+    "tsconfigFilePath": "<projectFolder>/tsconfig.api.json"
+  },
+
+  "apiReport": {
+    "enabled": true,
+    "reportFolder": "<projectFolder>/etc/",
+    "reportTempFolder": "<projectFolder>/temp/",
+    "reportFileName": "faster-ui.api.md"
+  },
+
+  // Off: neither is the deliverable. The report is the reviewable public
+  // contract; a doc model and a rollup would be two more artifacts to keep
+  // in sync with nothing consuming them. `tsdocMetadata` off keeps
+  // dist/tsdoc-metadata.json out of the published tarball.
+  "docModel": { "enabled": false },
+  "dtsRollup": { "enabled": false },
+  "tsdocMetadata": { "enabled": false },
+
+  "messages": {
+    "compilerMessageReporting": {
+      "default": { "logLevel": "warning" }
+    },
+    "extractorMessageReporting": {
+      "default": { "logLevel": "warning" },
+      // KEPT VISIBLE, deliberately. `ButtonBaseProps` is extended by both
+      // TextButtonProps and IconOnlyButtonProps but is not exported from
+      // src/index.ts, so a consumer cannot name the base type. That is a real
+      // pre-existing hole in the public surface — the first thing this gate
+      // found, before it was even installed. Fixing it changes the public API,
+      // which feature 004 is explicitly out of scope for, so the warning ships
+      // in the report and the fix is its own change. Silencing it here to get a
+      // clean first commit would throw the finding away.
+      "ae-forgotten-export": { "logLevel": "warning", "addToApiReportFile": true },
+
+      // Turned off, and this is NOT the same act as silencing the warning above.
+      // Release tags (@alpha/@beta/@public/@internal) are api-extractor's
+      // mechanism for packages that ship an API at more than one stability
+      // level. This package has exactly one public surface — everything exported
+      // from src/index.ts is public, by construction — so the tag would be
+      // ceremony on all twelve exports. Left on, eleven warnings per run bury
+      // the ae-forgotten-export finding that actually matters.
+      "ae-missing-release-tag": { "logLevel": "none" }
+    },
+    "tsdocMessageReporting": {
+      "default": { "logLevel": "warning" }
+    }
+  }
+}

@@ -4,3 +4,4 @@
    files, which use a few layout utilities for harness scaffolding. */
 @import '../../src/tokens/tokens.css';
 @source '../../src/**/*.cy.tsx';
+@source './a11y.ts';
