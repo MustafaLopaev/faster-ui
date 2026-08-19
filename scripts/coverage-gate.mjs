@@ -23,7 +23,7 @@
  * parses TypeScript fails in exactly the interesting cases.
  */
 import ts from 'typescript'
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -68,47 +68,87 @@ function unionMembers(typeNode, aliases) {
   return []
 }
 
+/**
+ * Where a component's props may be declared.
+ *
+ * Both layouts are supported deliberately: props live in `<Name>.tsx` in the
+ * original layout, and a component large enough to warrant it may split them
+ * into `<Name>.types.ts`. This gate asks "are the public props documented and
+ * reachable", which is a question about the props, not about which file holds
+ * them — tying it to one filename would make an ordinary refactor look like a
+ * coverage regression.
+ */
+function propSourcesFor(dir, name) {
+  return [join(dir, `${name}.tsx`), join(dir, `${name}.types.ts`)].filter((f) => existsSync(f))
+}
+
 function analyseComponent(name) {
   const dir = join(COMPONENTS_DIR, name)
-  const implFile = join(dir, `${name}.tsx`)
   const storiesFile = join(dir, `${name}.stories.tsx`)
-  const impl = parse(implFile)
+  const sources = propSourcesFor(dir, name)
+
+  // A directory under src/components/ that declares no component of its own —
+  // `internal/`, shared helpers — is not a component and has nothing to answer
+  // for here. Skipping it silently is right; crashing on it, as an earlier
+  // version did, turns someone else's ordinary refactor into a red gate with a
+  // stack trace for a message.
+  if (sources.length === 0) return
+  if (!existsSync(storiesFile)) {
+    report(
+      join(dir, `${name}.tsx`),
+      1,
+      'missing-stories',
+      `${name} declares a component but has no ${name}.stories.tsx. Principle V requires one story per variant and per meaningful state.`,
+    )
+    return
+  }
+
   const stories = parse(storiesFile)
   const storiesText = readFileSync(storiesFile, 'utf8')
 
   // ── 1. What the component declares ────────────────────────────────────────
   const aliases = new Map()
-  impl.forEachChild((node) => {
-    if (ts.isTypeAliasDeclaration(node)) aliases.set(node.name.text, node.type)
-  })
+  const props = new Map() // name → { file, line, documented, union }
 
-  const props = new Map() // name → { node, documented, union }
-  impl.forEachChild((node) => {
-    if (!ts.isInterfaceDeclaration(node) || !node.name.text.endsWith('Props')) return
-    for (const member of node.members) {
-      if (!ts.isPropertySignature(member)) continue
-      const prop = nameOf(member)
-      if (!prop) continue
+  for (const implFile of sources) {
+    const impl = parse(implFile)
+    impl.forEachChild((node) => {
+      if (ts.isTypeAliasDeclaration(node)) aliases.set(node.name.text, node.type)
+    })
 
-      // `danger?: never` and friends are type-level EXCLUSIONS, not props.
-      // They exist to make an illegal combination a compile error; there is
-      // nothing for a consumer to pass, document, or put in a control.
-      if (member.type?.kind === ts.SyntaxKind.NeverKeyword) continue
+    impl.forEachChild((node) => {
+      if (!ts.isInterfaceDeclaration(node) || !node.name.text.endsWith('Props')) return
+      for (const member of node.members) {
+        if (!ts.isPropertySignature(member)) continue
+        const prop = nameOf(member)
+        if (!prop) continue
 
-      const documented = (ts.getJSDocCommentsAndTags(member) ?? []).some((d) => ts.isJSDoc(d))
-      const existing = props.get(prop)
-      props.set(prop, {
-        line: lineOf(member, impl),
-        // A prop declared on two interfaces of a discriminated union needs
-        // documenting once — the union that reaches the consumer is the sum.
-        documented: existing?.documented || documented,
-        union: [...new Set([...(existing?.union ?? []), ...unionMembers(member.type, aliases)])],
-      })
-    }
-  })
+        // `danger?: never` and friends are type-level EXCLUSIONS, not props.
+        // They exist to make an illegal combination a compile error; there is
+        // nothing for a consumer to pass, document, or put in a control.
+        if (member.type?.kind === ts.SyntaxKind.NeverKeyword) continue
+
+        const documented = (ts.getJSDocCommentsAndTags(member) ?? []).some((d) => ts.isJSDoc(d))
+        const existing = props.get(prop)
+        props.set(prop, {
+          file: implFile,
+          line: lineOf(member, impl),
+          // A prop declared on two interfaces of a discriminated union needs
+          // documenting once — the union that reaches the consumer is the sum.
+          documented: existing?.documented || documented,
+          union: [...new Set([...(existing?.union ?? []), ...unionMembers(member.type, aliases)])],
+        })
+      }
+    })
+  }
 
   if (props.size === 0) {
-    report(implFile, 1, 'no-props-found', `No \`*Props\` interface found for ${name}.`)
+    report(
+      sources[0],
+      1,
+      'no-props-found',
+      `No \`*Props\` interface found for ${name} in ${sources.map((f) => relative(dir, f)).join(' or ')}.`,
+    )
     return
   }
 
@@ -147,7 +187,7 @@ function analyseComponent(name) {
   for (const [prop, info] of props) {
     if (!info.documented) {
       report(
-        implFile,
+        info.file,
         info.line,
         'undocumented-prop',
         `\`${name}.${prop}\` has no JSDoc. That comment is what IntelliSense and the Storybook autodocs table render — without it the prop is undocumented everywhere a consumer looks (Principle III).`,
