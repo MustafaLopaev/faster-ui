@@ -27,12 +27,19 @@ const FORK_GUARD = 'github.event.pull_request.head.repo.full_name == github.repo
 const REQUIRED_CHECK_WORKFLOWS = new Set(['ci.yml', 'release.yml'])
 
 /**
- * The one model-driven workflow allowed to write, and only ever onto a new
- * branch (FR-034). `release.yml` and `docs.yml` also write, but neither goes
- * anywhere near the model credential, so the pairing this rule guards against
- * — a job that can be talked into something AND can act on it — does not arise.
+ * The one model-driven JOB allowed to write, and only ever onto a new branch
+ * (FR-034).
+ *
+ * The unit here is the job, not the file, and that distinction is load-bearing:
+ * `visual.yml` contains both a job that writes (`accept-baselines`, which opens
+ * a baseline pull request and holds no credential) and jobs that hold the
+ * credential (`visual-judge`, `nightly-sweep`, which cannot write). Neither job
+ * holds both, so the pairing this rule exists to prevent — something that can be
+ * talked into an action AND can carry it out — never arises. A file-level rule
+ * would have to be silenced here, and silencing it would also stop it catching
+ * the real thing.
  */
-const MODEL_DRIVEN_MAY_WRITE_CONTENTS = new Set(['changelog.yml'])
+const MODEL_DRIVEN_JOBS_THAT_MAY_WRITE = new Set(['draft-changelog'])
 
 const problems = []
 const fail = (file, message) => problems.push(`${file}: ${message}`)
@@ -76,27 +83,26 @@ for (const file of files) {
     )
   }
 
-  // 3. The pairing that matters: a workflow that holds the model credential must
-  //    not also hold write access. A job that cannot write cannot be talked into
-  //    writing — injection hardening measure 1, the strongest of the four.
-  //    `changelog.yml` is the single exception, and it writes onto a new branch
-  //    only; it may never push to the default branch (FR-034).
-  if (
-    text.includes(SECRET) &&
-    /^\s+contents:\s*write/m.test(text) &&
-    !MODEL_DRIVEN_MAY_WRITE_CONTENTS.has(file)
-  ) {
-    fail(
-      file,
-      'holds ' +
-        SECRET +
-        ' AND grants `contents: write`. A model-driven job that can write is a ' +
-        'job an injected instruction can make write.',
-    )
-  }
+  // A workflow-level `contents: write` reaches every job in the file, so it is
+  // read once and applied per job below.
+  const workflowGrantsWrite = /^permissions:\n(?:\s+\w[\w-]*:.*\n)*?\s+contents:\s*write/m.test(text)
+
+  const triggersOnPullRequest = /^\s+pull_request:/m.test(text)
 
   for (const job of jobs) {
     if (!job.text.includes(SECRET)) continue
+
+    // 3. The pairing that matters: a job that holds the model credential must
+    //    not also hold write access. A job that cannot write cannot be talked
+    //    into writing — injection hardening measure 1, the strongest of the four.
+    const jobGrantsWrite = workflowGrantsWrite || /^\s+contents:\s*write/m.test(job.text)
+    if (jobGrantsWrite && !MODEL_DRIVEN_JOBS_THAT_MAY_WRITE.has(job.id)) {
+      fail(
+        file,
+        `job \`${job.id}\` holds ${SECRET} AND has \`contents: write\`. A model-driven ` +
+          'job that can write is a job an injected instruction can make write.',
+      )
+    }
 
     // 4. FR-019 — every model-driven job skips GREEN without the credential.
     if (!job.text.includes(GUARD)) {
@@ -109,11 +115,18 @@ for (const file of files) {
     }
 
     // 5. A fork-originated pull request must never reach a job holding a secret.
-    if (/^on:/m.test(text) && /^\s+pull_request:/m.test(text) && !job.text.includes(FORK_GUARD)) {
+    //    A job pinned to a non-pull_request event cannot be reached from a fork
+    //    at all — a scheduled run has no pull-request context — so requiring the
+    //    guard there would be noise, and noise is how a check gets ignored.
+    const pinnedToOtherEvent =
+      /github\.event_name\s*==\s*'(?!pull_request')[a-z_]+'/.test(job.text) &&
+      !/github\.event_name\s*==\s*'pull_request'/.test(job.text)
+
+    if (triggersOnPullRequest && !pinnedToOtherEvent && !job.text.includes(FORK_GUARD)) {
       fail(
         file,
-        `job \`${job.id}\` uses ${SECRET} on a pull_request trigger without the fork guard ` +
-          `\`if: ${FORK_GUARD}\`.`,
+        `job \`${job.id}\` uses ${SECRET} and can run on a pull_request event without the ` +
+          `fork guard \`if: ${FORK_GUARD}\`.`,
       )
     }
   }
@@ -124,7 +137,7 @@ console.log(`Workflow invariants — ${files.length} files: ${files.join(', ')}\
 if (problems.length === 0) {
   console.log('✔ No required workflow touches the credential; no job holds it without the')
   console.log('  guard and the fork condition; nothing uses pull_request_target; no')
-  console.log('  model-driven workflow can write except the changelog drafter.')
+  console.log('  model-driven job can both hold the credential and write.')
   process.exit(0)
 }
 

@@ -1,7 +1,6 @@
 import { defineConfig } from 'cypress'
 import { mkdirSync, renameSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import type { PreviewServer } from 'vite'
 
 const VISUAL_PORT = 8199
 const CURRENT_DIR = 'visual/current'
@@ -53,30 +52,16 @@ export default defineConfig({
     screenshotsFolder: CURRENT_DIR,
     screenshotOnRunFailure: !isConsumers,
     trashAssetsBeforeRuns: true,
+    // Neither e2e suite starts its own server: Cypress verifies `baseUrl` is
+    // reachable BEFORE `before:run` fires, so a server started in this file is
+    // always started too late. `scripts/visual-capture.mjs` and
+    // `scripts/consumer-smoke.mjs` own their servers' lifecycles instead.
     setupNodeEvents(on) {
-      let server: PreviewServer | undefined
-
-      // Serving the built workbench needs an HTTP origin (the manifest is
-      // fetched, so file:// will not do). Vite is already a dependency and
-      // `vite preview` serves an arbitrary outDir — no static-server package
-      // is added for this (research R-2). `configFile: false` keeps the
-      // library build's lib/dts plugins out of a plain static serve.
-      on('before:run', async () => {
-        // The consumer suite talks to a `next start` server that
-        // scripts/consumer-smoke.mjs starts and stops; only the visual suite
-        // needs the workbench served here.
-        if (isConsumers) return
-        const { preview } = await import('vite')
-        server = await preview({
-          configFile: false,
-          build: { outDir: 'storybook-static' },
-          preview: { port: VISUAL_PORT, strictPort: true, host: 'localhost' },
-        })
-      })
-
-      on('after:run', async () => {
-        await server?.close()
-        server = undefined
+      on('task', {
+        'visual:log'(message: string) {
+          console.log(message)
+          return null
+        },
       })
 
       // Cypress nests screenshots under a per-spec folder and appends its own
