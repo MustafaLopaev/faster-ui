@@ -1,24 +1,29 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Input } from './Input'
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Input } from "./Input";
 
 const SearchIcon = (
   <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="fui:size-full">
     <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
     <path d="m10.5 10.5 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
-)
+);
 
 const CalendarIcon = (
   <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="fui:size-full">
     <rect x="2.5" y="3.5" width="11" height="10" rx="1" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path
+      d="M2.5 6.5h11M5.5 2v3M10.5 2v3"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
   </svg>
-)
+);
 
 const meta = {
-  title: 'Components/Input',
+  title: "Components/Input",
   component: Input,
-  parameters: { layout: 'centered' },
+  parameters: { layout: "centered" },
   decorators: [
     (Story) => (
       <div className="fui:w-80">
@@ -26,18 +31,18 @@ const meta = {
       </div>
     ),
   ],
-} satisfies Meta<typeof Input>
+} satisfies Meta<typeof Input>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { label: 'Email', placeholder: 'you@example.com' },
-}
+  args: { label: "Email", placeholder: "you@example.com" },
+};
 
 export const Error: Story = {
-  args: { label: 'Email', defaultValue: 'not-an-email', error: 'Enter a valid email address' },
-}
+  args: { label: "Email", defaultValue: "not-an-email", error: "Enter a valid email address" },
+};
 
 export const Disabled: Story = {
   render: () => (
@@ -46,9 +51,8 @@ export const Disabled: Story = {
       <Input label="With value" defaultValue="Entered value ink" disabled />
     </div>
   ),
-}
+};
 
-// All seven Figma adornment sets: icons, affixes, number steppers, clearable.
 export const Adornments: Story = {
   render: () => (
     <div className="fui:flex fui:flex-col fui:gap-4">
@@ -60,7 +64,7 @@ export const Adornments: Story = {
       <Input label="Clearable" clearable defaultValue="Clear me" />
     </div>
   ),
-}
+};
 
 export const Sizes: Story = {
   render: () => (
@@ -70,33 +74,33 @@ export const Sizes: Story = {
       <Input size="sm" label="Small (24px)" placeholder="12/18 ramp" />
     </div>
   ),
-}
+};
 
 export const Playground: Story = {
   args: {
-    label: 'Playground',
-    placeholder: 'Type here…',
-    size: 'md',
-    error: '',
+    label: "Playground",
+    placeholder: "Type here…",
+    size: "md",
+    error: "",
     disabled: false,
     clearable: false,
-    prefix: '',
-    suffix: '',
-    className: '',
+    prefix: "",
+    suffix: "",
+    className: "",
   },
   argTypes: {
-    size: { control: 'select', options: ['sm', 'md', 'lg'] },
-    label: { control: 'text' },
-    error: { control: 'text', description: 'Presence switches the field into the error state' },
-    placeholder: { control: 'text' },
-    disabled: { control: 'boolean' },
-    clearable: { control: 'boolean' },
-    prefix: { control: 'text' },
-    suffix: { control: 'text' },
-    leftIcon: { control: false, description: 'Leading in-field icon (ReactNode)' },
-    rightIcon: { control: false, description: 'Trailing in-field icon (ReactNode)' },
+    size: { control: "select", options: ["sm", "md", "lg"] },
+    label: { control: "text" },
+    error: { control: "text", description: "Presence switches the field into the error state" },
+    placeholder: { control: "text" },
+    disabled: { control: "boolean" },
+    clearable: { control: "boolean" },
+    prefix: { control: "text" },
+    suffix: { control: "text" },
+    leftIcon: { control: false, description: "Leading in-field icon (ReactNode)" },
+    rightIcon: { control: false, description: "Trailing in-field icon (ReactNode)" },
     onClear: { control: false },
-    className: { control: 'text', description: 'Merge-safe escape hatch on the root' },
+    className: { control: "text", description: "Merge-safe escape hatch on the root" },
   },
   render: ({ error, prefix, suffix, ...args }) => (
     <Input
@@ -106,4 +110,4 @@ export const Playground: Story = {
       suffix={suffix || undefined}
     />
   ),
-}
+};

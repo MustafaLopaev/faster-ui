@@ -1,6 +1,5 @@
-import { ICON_BASE } from './icon.types'
+import { ICON_BASE } from "./icon.types";
 
-/** Decrement affordance for `Input type="number"` (Figma stepper). */
 export function ChevronDownIcon() {
   return (
     <svg viewBox="0 0 14 14" fill="none" aria-hidden="true" className={ICON_BASE}>
@@ -12,5 +11,5 @@ export function ChevronDownIcon() {
         strokeLinejoin="round"
       />
     </svg>
-  )
+  );
 }

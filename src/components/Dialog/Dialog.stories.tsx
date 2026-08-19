@@ -1,46 +1,47 @@
-import { useState } from 'react'
-import type { ReactNode } from 'react'
-import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Button } from '../Button'
-import { Dialog } from './Dialog'
-import type { DialogProps } from './Dialog.types'
+import { useState } from "react";
+import type { ReactNode } from "react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Button } from "../Button";
+import { Dialog } from "./Dialog";
+import type { DialogProps } from "./Dialog.types";
 
 const WarningIcon = (
-  <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" className="fui:size-4 fui:shrink-0 fui:text-feedback-warning">
+  <svg
+    viewBox="0 0 16 16"
+    fill="currentColor"
+    aria-hidden="true"
+    className="fui:size-4 fui:shrink-0 fui:text-feedback-warning"
+  >
     <path
       fillRule="evenodd"
       clipRule="evenodd"
       d="M8.87 1.97a1 1 0 0 0-1.74 0L.9 12.86A1 1 0 0 0 1.76 14.4h12.48a1 1 0 0 0 .87-1.53L8.87 1.97ZM7.25 6a.75.75 0 0 1 1.5 0v3.5a.75.75 0 0 1-1.5 0V6ZM8 12.6a.9.9 0 1 0 0-1.8.9.9 0 0 0 0 1.8Z"
     />
   </svg>
-)
+);
 
 const meta = {
-  title: 'Components/Dialog',
+  title: "Components/Dialog",
   component: Dialog,
-  parameters: { layout: 'centered' },
-  // Render-only stories drive `open` through their in-canvas trigger; these
-  // meta-level args only satisfy the required controlled props for typing.
+  parameters: { layout: "centered" },
   args: { open: false, onClose: () => {} },
-} satisfies Meta<typeof Dialog>
+} satisfies Meta<typeof Dialog>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
-// Every story is openable/closable in-canvas: the trigger owns the
-// controlled `open` state exactly like a consumer would.
 function DialogDemo({
   label,
   children,
   footer,
   ...dialogProps
-}: Omit<Partial<DialogProps>, 'children' | 'footer'> & {
-  label: string
-  children?: ReactNode
-  footer?: (close: () => void) => ReactNode
+}: Omit<Partial<DialogProps>, "children" | "footer"> & {
+  label: string;
+  children?: ReactNode;
+  footer?: (close: () => void) => ReactNode;
 }) {
-  const [open, setOpen] = useState(false)
-  const close = () => setOpen(false)
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)}>
@@ -50,10 +51,9 @@ function DialogDemo({
         {children}
       </Dialog>
     </>
-  )
+  );
 }
 
-// Figma Basic set: Ghost + Primary md footer.
 export const Basic: Story = {
   render: () => (
     <DialogDemo
@@ -74,10 +74,8 @@ export const Basic: Story = {
       </p>
     </DialogDemo>
   ),
-}
+};
 
-// Figma Warning set — a composition, not API (R-15): Warning/600 icon beside
-// the body text and a danger-outline confirm action.
 export const Warning: Story = {
   render: () => (
     <DialogDemo
@@ -103,7 +101,7 @@ export const Warning: Story = {
       </div>
     </DialogDemo>
   ),
-}
+};
 
 export const Scrollable: Story = {
   render: () => (
@@ -129,7 +127,7 @@ export const Scrollable: Story = {
       </div>
     </DialogDemo>
   ),
-}
+};
 
 export const WithDividers: Story = {
   render: () => (
@@ -147,17 +145,17 @@ export const WithDividers: Story = {
       )}
     >
       <p className="fui:m-0">
-        Full-bleed hairline dividers separate the header and footer from the body, with the
-        16/24 padding rhythm from the With divider set.
+        Full-bleed hairline dividers separate the header and footer from the body, with the 16/24
+        padding rhythm from the With divider set.
       </p>
     </DialogDemo>
   ),
-}
+};
 
 export const Sizes: Story = {
   render: () => (
     <div className="fui:flex fui:gap-4">
-      {(['sm', 'md', 'lg'] as const).map((size) => (
+      {(["sm", "md", "lg"] as const).map((size) => (
         <DialogDemo
           key={size}
           label={`Open ${size} (${{ sm: 400, md: 600, lg: 900 }[size]}px)`}
@@ -165,29 +163,31 @@ export const Sizes: Story = {
           size={size}
           footer={(close) => <Button onClick={close}>Close</Button>}
         >
-          <p className="fui:m-0">Panel width {{ sm: 400, md: 600, lg: 900 }[size]}px, viewport-capped.</p>
+          <p className="fui:m-0">
+            Panel width {{ sm: 400, md: 600, lg: 900 }[size]}px, viewport-capped.
+          </p>
         </DialogDemo>
       ))}
     </div>
   ),
-}
+};
 
 export const Playground: Story = {
   args: {
-    title: 'Playground dialog',
-    size: 'md',
+    title: "Playground dialog",
+    size: "md",
     dividers: false,
     showClose: true,
   },
   argTypes: {
-    title: { control: 'text' },
-    size: { control: 'select', options: ['sm', 'md', 'lg'] },
-    dividers: { control: 'boolean' },
-    showClose: { control: 'boolean' },
-    open: { control: false, description: 'Controlled by the in-canvas trigger' },
+    title: { control: "text" },
+    size: { control: "select", options: ["sm", "md", "lg"] },
+    dividers: { control: "boolean" },
+    showClose: { control: "boolean" },
+    open: { control: false, description: "Controlled by the in-canvas trigger" },
     onClose: { control: false },
     footer: { control: false },
-    className: { control: 'text', description: 'Merge-safe escape hatch on the panel' },
+    className: { control: "text", description: "Merge-safe escape hatch on the panel" },
   },
   render: ({ open: _open, onClose: _onClose, footer: _footer, ...args }) => (
     <DialogDemo
@@ -205,4 +205,4 @@ export const Playground: Story = {
       <p className="fui:m-0">Tweak every public prop from the controls panel.</p>
     </DialogDemo>
   ),
-}
+};

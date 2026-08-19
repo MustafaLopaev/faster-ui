@@ -1,12 +1,10 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './dev.css'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./dev.css";
 
-// Dev playground: every visual below uses semantic `fui:` utilities only —
-// flipping `.dark` on <html> (or editing a token) restyles it with zero JSX edits.
-const toggleDark = () => document.documentElement.classList.toggle('dark')
+const toggleDark = () => document.documentElement.classList.toggle("dark");
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <main className="fui:min-h-screen fui:bg-surface-page fui:font-sans fui:p-10 fui:flex fui:flex-col fui:gap-6">
       <header className="fui:flex fui:items-center fui:justify-between">
@@ -23,8 +21,8 @@ createRoot(document.getElementById('root')!).render(
       </header>
 
       <p className="fui:text-body fui:text-text-secondary fui:max-w-prose">
-        Sample elements styled exclusively with semantic tokens extracted from
-        the TapTap Design System. Rebranding or switching modes touches only
+        Sample elements styled exclusively with semantic tokens extracted from the TapTap Design
+        System. Rebranding or switching modes touches only
         <code> src/tokens/tokens.css</code>.
       </p>
 
@@ -54,17 +52,20 @@ createRoot(document.getElementById('root')!).render(
       <section className="fui:flex fui:gap-2">
         {(
           [
-            ['error', 'fui:bg-feedback-error'],
-            ['warning', 'fui:bg-feedback-warning'],
-            ['success', 'fui:bg-feedback-success'],
-            ['info', 'fui:bg-feedback-info'],
+            ["error", "fui:bg-feedback-error"],
+            ["warning", "fui:bg-feedback-warning"],
+            ["success", "fui:bg-feedback-success"],
+            ["info", "fui:bg-feedback-info"],
           ] as const
         ).map(([label, bg]) => (
-          <span key={label} className={`${bg} fui:text-on-action fui:text-caption fui:rounded-control fui:px-2 fui:py-1`}>
+          <span
+            key={label}
+            className={`${bg} fui:text-on-action fui:text-caption fui:rounded-control fui:px-2 fui:py-1`}
+          >
             {label}
           </span>
         ))}
       </section>
     </main>
   </StrictMode>,
-)
+);
