@@ -203,6 +203,45 @@ describe('<Input /> clear affordance with real typing (I8)', () => {
   })
 })
 
+describe('<Input /> dark mode (US5, data-model §4)', () => {
+  const INK_800 = 'rgb(38, 43, 51)' // surface-raised on dark
+  const WHITE_A7 = 'rgba(255, 255, 255, 0.07)' // border-default / border-strong on dark
+  const WHITE_A79 = 'rgba(255, 255, 255, 0.79)' // text-control on dark
+  const WHITE_A30 = 'rgba(255, 255, 255, 0.3)' // placeholder inks on dark
+
+  beforeEach(() => {
+    cy.document().then((doc) => doc.documentElement.classList.add('dark'))
+  })
+  afterEach(() => {
+    cy.document().then((doc) => doc.documentElement.classList.remove('dark'))
+  })
+
+  it('flips field fill, border, value ink and disabled placeholder to the dark derivations', () => {
+    cy.mount(
+      <div>
+        <Input label="Enabled" defaultValue="typed" placeholder="hint" data-cy="enabled" />
+        <Input label="Disabled" disabled placeholder="hint" data-cy="disabled" />
+        <div data-cy="park" className="fui:h-25" />
+      </div>,
+    )
+    cy.get('[data-cy=park]').realHover()
+    wrapperOf('[data-cy=enabled]').should(($el) => {
+      const cs = getComputedStyle($el[0])
+      expect(cs.backgroundColor, 'field fill flips to ink-800').to.eq(INK_800)
+      expect(cs.borderTopColor, 'border flips to white-a7').to.eq(WHITE_A7)
+    })
+    cy.get('[data-cy=enabled]').should(($el) => {
+      expect(getComputedStyle($el[0]).color, 'value ink flips to white-a79').to.eq(WHITE_A79)
+    })
+    cy.get('[data-cy=disabled]').should(($el) => {
+      expect(
+        getComputedStyle($el[0], '::placeholder').color,
+        'disabled placeholder flips to white-a30',
+      ).to.eq(WHITE_A30)
+    })
+  })
+})
+
 describe('<Input /> geometry (I9)', () => {
   const GEOMETRY = {
     lg: { height: '40px', padX: '12px', font: '16px', lineHeight: '24px' },
