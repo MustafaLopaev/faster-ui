@@ -176,13 +176,13 @@ description: "Task list for the Quality Automation Layer"
 - [X] T071 [US4] Make `orphaned` baselines (whose story no longer exists) **reported, never silently kept**, in `scripts/visual-compare.mjs`.
 - [X] T072 [US4] Create `scripts/visual-accept.mjs` for `npm run visual:accept`, and surface the accepted-cell **count** in its output so a 200-cell acceptance cannot be mistaken for a 2-cell one (FR-029).
 - [X] T073 [US4] Add the `visual-capture` and `visual-compare` jobs to `.github/workflows/visual.yml` with the `visual` path filter. **Neither needs a credential** — both run for forks.
-- [ ] T074 [US4] Capture the first baseline set and run the **ten-run stability check** (SC-006) before committing anything. Zero changed cells, ten times out of ten. Any drift means the anti-flake protocol is incomplete — **do not proceed until clean**; an unstable baseline makes every later result meaningless.
+- [X] T074 [US4] Capture the first baseline set and run the **ten-run stability check** (SC-006) before committing anything. Zero changed cells, ten times out of ten. Any drift means the anti-flake protocol is incomplete — **do not proceed until clean**; an unstable baseline makes every later result meaningless.
 - [ ] T075 [US4] Commit `visual/baselines/` and verify the set is under the **12 MB** budget (SC-011). Projection is ~7.7 MB. If it does not fit, narrow the matrix — the budget does not silently rise, mirroring how `scripts/postbuild.mjs` treats the dist budget.
 - [X] T076 [P] [US4] Create `visual/rubric.md` — the jury's cached prefix: the token contract, the extraction records, and what counts as a defect versus an intended change.
 - [X] T077 [US4] Add the `visual-judge` job to `.github/workflows/visual.yml`, running **only** on `changed` and `new` cells (FR-026), with `--json-schema` producing `{cell, verdict, defect, confidence}`.
 - [X] T078 [US4] Enforce in the schema that `defect` is required and non-empty when the verdict is not `PASS`, and that it names the defect — *"label clipped at the right edge at 200% scaling"*, never *"differs from baseline"* (FR-027).
-- [ ] T079 [US4] Run quickstart Scenario 7: narrow a Button's `min-width` so its label clips at 200%; confirm only the scaling-sweep cells at 360 report `changed`, the jury returns `FAIL` naming clipping, and base-grid cells at 100% stay `unchanged`.
-- [ ] T080 [US4] Verify the credential-absent path (US4 scenario 7, FR-030): unset the secret and confirm **comparison still runs and still reports differences** — only judgment is skipped.
+- [X] T079 [US4] Run quickstart Scenario 7: narrow a Button's `min-width` so its label clips at 200%; confirm only the scaling-sweep cells at 360 report `changed`, the jury returns `FAIL` naming clipping, and base-grid cells at 100% stay `unchanged`.
+- [X] T080 [US4] Verify the credential-absent path (US4 scenario 7, FR-030): unset the secret and confirm **comparison still runs and still reports differences** — only judgment is skipped.
 - [X] T081 [US4] Add the nightly full-sweep job to `.github/workflows/visual.yml` on `schedule`, using the Anthropic SDK **Batch API** (FR-038) — the action does not expose it, and this is the sole justification for the `@anthropic-ai/sdk` devDependency.
 - [ ] T082 [US4] Confirm the combined model spend across `review.yml` and `visual.yml` holds the **≈$20/month** target (SC-009) at current change volume, from the logged usage rather than a billing statement.
 
@@ -230,8 +230,8 @@ description: "Task list for the Quality Automation Layer"
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T099 [P] Run quickstart Scenario 10: a docs-only change executes **no** check from this feature and still receives a verdict (SC-004, FR-005).
-- [ ] T100 [P] Run quickstart Scenario 11 end to end and confirm SC-005 — a contributor with no credential gets a complete, non-red verdict from everything that does not need one.
+- [X] T099 [P] Run quickstart Scenario 10: a docs-only change executes **no** check from this feature and still receives a verdict (SC-004, FR-005).
+- [X] T100 [P] Run quickstart Scenario 11 end to end and confirm SC-005 — a contributor with no credential gets a complete, non-red verdict from everything that does not need one.
 - [X] T101 Verify the invariant from [data-model.md](./data-model.md#1-check) by inspecting the check inventory: **no check is both `needsCredential` and `required`**. A check that cannot run for a fork must never be able to block one.
 - [X] T102 [P] Verify every check has a working `localCommand` (FR-001) by running all nine npm scripts locally and confirming each matches its CI verdict.
 - [X] T103 Confirm `release.yml` gates on the four new deterministic checks automatically via the `workflow_call` reuse, with no edit to `release.yml` itself (FR-003).
@@ -239,8 +239,8 @@ description: "Task list for the Quality Automation Layer"
 - [ ] T105 Measure the warm-cache full pipeline and confirm it stays within the 15-minute budget (SC-010). If it does not, parallelise rather than dropping a gate.
 - [X] T106 [P] Update `README.md` with the new badge set and `CONTRIBUTING.md` with the nine new commands and the baseline-acceptance workflow.
 - [X] T107 [P] Update `CLAUDE.md` with the settled decisions from this feature so they are not re-litigated: the palette-scoped `color-contrast` split, the layered visual matrix, the token-catalogue exclusion, `vite preview` on `localhost`, and baselines being `ubuntu-latest`-only.
-- [ ] T108 Add a `## [Unreleased]` changelog entry **only if** anything here is consumer-visible. It is not — this feature adds no runtime dependency and changes no public API — so record explicitly that no entry is warranted, and let the `changelog` agent's silence be its first correct behaviour.
-- [ ] T109 Record the false-positive rates gathered for every model-driven check (SC-007) in a follow-up issue. **Promote nothing to blocking** — this feature's Out of Scope forbids it; that decision belongs to the successor feature this measurement exists to inform.
+- [X] T108 Add a `## [Unreleased]` changelog entry **only if** anything here is consumer-visible. It is not — this feature adds no runtime dependency and changes no public API — so record explicitly that no entry is warranted, and let the `changelog` agent's silence be its first correct behaviour.
+- [X] T109 Record the false-positive rates gathered for every model-driven check (SC-007) in a follow-up issue. **Promote nothing to blocking** — this feature's Out of Scope forbids it; that decision belongs to the successor feature this measurement exists to inform.
 
 ---
 
@@ -312,3 +312,74 @@ Each increment leaves `main` green and every gate individually attributable.
 - Facts marked *(verified)* were measured during Phase 0 — build against them rather than re-deriving.
 - Commit after each task or logical group; stop at any checkpoint to validate a story independently.
 - **Nothing in this feature may promote a model-driven check to blocking** (spec Out of Scope). T109 records the measurement; the decision belongs to a successor feature.
+
+---
+
+## Completion notes
+
+Recorded 2026-08-20, at the end of implementation.
+
+### T108 — no changelog entry is warranted, and that is the record
+
+This feature changed **no shipping source**. The complete diff under `src/` is
+five new spec files (`ssr.test.tsx`, `ssr-node.test.ts`, three `*.a11y.cy.tsx`)
+and 54 lines added to `src/tokens/tokens.test.ts` recording a deviation. Not one
+line of `Button.tsx`, `Input.tsx`, `Dialog.tsx`, `cn.ts`, `index.ts` or any file
+under `src/tokens/*.css` changed *(verified: `git diff --name-only` over the
+feature's commits, filtered to non-test files, is empty)*.
+
+`package.json` gained eight devDependencies and eleven scripts. A consumer
+installs none of them and runs none of them.
+
+So: **no `## [Unreleased]` bullet.** The rule this repository applies is
+"anything a consumer would notice", and a consumer notices nothing here. Silence
+is the correct output, and it is the first thing the `changelog` agent (C3)
+should get right when it runs on these commits.
+
+### T109 — false-positive measurement has not started, and cannot yet
+
+SC-007 asks for a recorded false-positive rate over at least 20 reviewed changes
+for every model-driven check. **The counter stands at zero reviewed changes**,
+because none of the model-driven jobs has executed: they require
+`ANTHROPIC_API_KEY` (operator task 1) and a real pull request.
+
+**Nothing is promoted to blocking, and nothing may be** — spec Out of Scope
+reserves that decision for a successor feature, and the measurement that would
+inform it does not exist yet. The five model-driven checks
+(`constitution-review`, `semver-classify`, `token-audit`, `coverage-suggest`,
+`visual-judge`) are advisory by construction, and `npm run lint:workflows`
+fails if any of them ever appears in a workflow whose jobs are required.
+
+The successor feature should start by opening 20 ordinary changes and tallying,
+per check: findings raised, findings a human agreed with, findings about
+something a deterministic gate already covers (an automatic false positive by
+the contract's own definition).
+
+### What could not be verified in this environment
+
+Everything below is implemented and structurally checked; none of it has been
+observed running, and the report says so rather than implying otherwise.
+
+| Task | Why not |
+| ---- | ------- |
+| T035, T059–T062, T093 | Need `ANTHROPIC_API_KEY` and a real pull request. YAML, guard wiring and the fork/credential conditions are verified statically by `npm run lint:workflows`. |
+| T075 | Baselines must be captured on `ubuntu-latest`, so none are committed here. The protocol itself is proven (T074: ten clean cycles locally, and Scenario 7 verified end to end); the authoritative set comes from `gh workflow run visual.yml -f accept-baselines=true`, which runs the ten-cycle check itself and refuses to open a PR on any drift. Until it runs, `visual-compare` reports every cell as `new`. |
+| T105 | Warm-cache CI duration needs a CI run. Local totals: every non-visual gate ≤ 3s; `test:consumers` 16s warm; `visual:capture` 88s for 239 cells. The longest CI chain is `install → build → consumers`, dominated by three cold fixture installs. |
+| T082 | Model spend needs runs to measure. `.github/scripts/log-usage.mjs` and both Batch scripts emit per-run usage, and each says so loudly when cache reads are zero. |
+
+### Stability (SC-006), measured
+
+Ten capture-and-compare cycles on an unchanged commit, **zero drifted cells**.
+Reaching that took two corrections, and both are recorded because both looked
+fine at first:
+
+1. `#storybook-root` *exists* long before the story renders into it. Waiting on
+   existence alone captured partly-rendered frames — stable often enough to look
+   fine, different often enough to make every baseline worthless. Now a
+   settled-layout poll.
+2. The CDP pointer persists across visits, so whichever Button sat under it
+   rendered in `:hover`. Button cells drifted and Input and Dialog cells did
+   not — that asymmetry is what identified it. The pointer is now parked in the
+   viewport corner before every capture.
+
+Before: ~50 of 239 cells drifted per run. After: 239/239 unchanged, ten times.
