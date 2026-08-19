@@ -1,7 +1,10 @@
 {
-  "name": "faster-ui",
+  "name": "@mlopaev/faster-ui",
   "version": "0.1.0",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist"
   ],
