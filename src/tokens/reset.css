@@ -1,0 +1,29 @@
+/**
+ * THEME RESET — wipe Tailwind's default theme namespaces.
+ *
+ * No off-system utility may exist. With these namespaces emptied, the only
+ * colour / radius / type / shadow / container utilities in the stylesheet are
+ * the ones `bridge.css` generates from our semantics (Principle I). Without
+ * the wipe the build also ships `fui:text-xl`, `fui:font-mono`, `fui:rounded-lg`
+ * and friends — off-system values a component could reach for by accident.
+ *
+ * NAMING NOTE. Tailwind runs with `prefix(fui)`, so every theme key emits as
+ * `--fui-<key>`: `--radius-full` becomes `--fui-radius-full`, `--font-sans`
+ * becomes `--fui-family-sans`'s old name, and so on. The primitives therefore
+ * avoid the `--fui-{color,radius,font,font-weight,text,shadow,container}-*`
+ * shapes entirely (typography uses `--fui-family|weight|size|lh-*`, the pill
+ * radius is `--fui-radius-pill`). Reusing those names makes the bridge emit
+ * self-referential declarations like `--fui-font-sans: var(--fui-font-sans)`,
+ * which resolve only because unlayered `:root` outranks `@layer theme`.
+ *
+ * MUST be imported after `tailwindcss/theme.css` and before `bridge.css`.
+ */
+@theme {
+  --color-*: initial;
+  --radius-*: initial;
+  --font-*: initial;
+  --font-weight-*: initial;
+  --text-*: initial;
+  --shadow-*: initial;
+  --container-*: initial;
+}

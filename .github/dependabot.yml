@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # Everything here is a devDependency (react/react-dom are peers), so a bad
+  # bump breaks CI, never a consumer. Grouped weekly to keep the PR count sane.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      react:
+        patterns: ['react', 'react-dom', '@types/react', '@types/react-dom']
+      storybook:
+        patterns: ['storybook', '@storybook/*']
+      testing:
+        patterns: ['jest', 'jest-*', '@types/jest', '@testing-library/*', 'cypress', 'cypress-*']
+      build:
+        patterns: ['vite', '@vitejs/*', 'vite-plugin-*', 'tailwindcss', '@tailwindcss/*', 'typescript', 'oxlint', '@swc/*']
+    commit-message:
+      prefix: chore
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore

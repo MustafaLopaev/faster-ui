@@ -4,7 +4,7 @@ import { mount } from 'cypress/react'
 import 'cypress-real-events/support'
 // Real token styling for every mounted component — Cypress CT is where the
 // compiled token chain is asserted (Jest stubs CSS).
-import '../../src/tokens/tokens.css'
+import './component.css'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

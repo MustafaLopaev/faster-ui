@@ -72,7 +72,14 @@ jobs:
       - run: npm ci
         env:
           CYPRESS_INSTALL_BINARY: '0'
-      - run: npm test
+      # Coverage thresholds live in jest.config.ts and fail the run on their own.
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
 
   cypress:
     runs-on: ubuntu-latest
@@ -122,4 +129,19 @@ jobs:
       - run: npm ci
         env:
           CYPRESS_INSTALL_BINARY: '0'
+      # `npm run build` also enforces the dist size budget (scripts/postbuild.mjs).
       - run: npm run build
+      - name: Verify the publishable tarball
+        run: |
+          set -euo pipefail
+          files="$(npm pack --dry-run --json | node -e "
+            let d='';process.stdin.on('data',c=>d+=c).on('end',()=>
+              console.log(JSON.parse(d)[0].files.map(f=>f.path).join('\n')))")"
+          echo "$files"
+          for required in dist/index.js dist/index.d.ts dist/styles.css dist/a11y.css LICENSE README.md; do
+            echo "$files" | grep -qx "$required" \
+              || { echo "::error::$required missing from the published tarball"; exit 1; }
+          done
+          if echo "$files" | grep -qE '\.(test|cy|stories)\.|^src/'; then
+            echo "::error::test, story or source files leaked into the tarball"; exit 1
+          fi

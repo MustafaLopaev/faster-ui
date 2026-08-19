@@ -290,3 +290,5 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
     </div>
   )
 })
+
+Input.displayName = 'Input'
