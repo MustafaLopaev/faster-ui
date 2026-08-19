@@ -1,0 +1,63 @@
+/**
+ * SEMANTICS — dark mode.
+ *
+ * Mode contract: a `dark` class on the document root, nothing else (FR-013).
+ * Components never reference the mode; every value below re-resolves at the
+ * token layer because the bridge is `@theme inline`.
+ *
+ * ORDERING CONTRACT: this file must be imported AFTER `semantic/light.css`.
+ * `.dark` and `:root` tie on specificity (0,1,0), so source order decides.
+ *
+ * Deliberately NOT re-declared (documented, not an omission):
+ *   - Brand action fills (`--fui-action-primary|danger-*`) and `--fui-on-action`:
+ *     no Dark/* counterparts exist in the Figma file and a filled control's
+ *     label contrast is measured against its own fill, not the page — the
+ *     light brand scales serve both modes (FR-013 fallback).
+ *   - Teal/red inks that already clear AA on ink surfaces
+ *     (`--fui-action-secondary-text-hover|active`, `--fui-border-hover`,
+ *     `--fui-focus-ring`, `--fui-feedback-*`).
+ *   - Disabled-state tokens, which WCAG 1.4.3/1.4.11 exempt.
+ * See `src/tokens/a11y.css` for the opt-in layer that raises everything —
+ * brand fills included — to WCAG 2.1 AA.
+ */
+.dark {
+  /* Surfaces */
+  --fui-surface-page: var(--fui-ink-900); /* derived pairing: TapTap dark ink */
+  --fui-surface-raised: var(--fui-ink-800); /* derived: elevation step above page */
+  --fui-surface-sunken: var(--fui-white-a4); /* derived */
+  --fui-overlay: var(--fui-black-a30); /* Figma Dark/Background/Smoke — same value, re-declared for explicitness */
+
+  /* Text inks */
+  --fui-text-color-primary: var(--fui-white-a90); /* derived: mirrors light alpha */
+  --fui-text-color-secondary: var(--fui-white-a79); /* Figma Dark/Fill Color/Text/Secondary */
+  --fui-text-color-placeholder: var(--fui-white-a30); /* derived */
+  --fui-text-color-disabled: var(--fui-white-a30); /* derived */
+  --fui-text-control: var(--fui-white-a79); /* Figma Dark/Fill Color/Text/Secondary */
+  --fui-text-heading: var(--fui-white-a90); /* derived: mirrors dark text-color-primary */
+  --fui-text-placeholder-disabled: var(--fui-white-a30); /* derived: mirrors dark placeholder */
+
+  /* Borders */
+  --fui-border-default: var(--fui-white-a7); /* Figma Dark/Stroke Color/Control Stroke */
+  --fui-border-subtle: var(--fui-white-a7); /* gap: no Dark divider style readable; nearest Figma dark stroke */
+  --fui-border-disabled: var(--fui-white-a7); /* gap: no Dark disabled stroke readable */
+  --fui-border-strong: var(--fui-white-a7); /* mirrors dark border-default (Figma Dark/Stroke Color/Control Stroke) */
+
+  /* Secondary/outline action inks — the light Neutral greys are unreadable on
+     ink (Neutral/600 label on ink-800 measures 1.63:1), so the dark sets use
+     the white-alpha ink language already established above. */
+  --fui-action-secondary-text: var(--fui-white-a79); /* was Neutral/600 → 1.63:1 on ink-800 */
+  --fui-action-secondary-text-disabled: var(--fui-white-a30); /* must read dimmer than the enabled label */
+  --fui-action-secondary-border: var(--fui-white-a30); /* was Neutral/300 → a near-white hairline on ink */
+  --fui-action-secondary-border-disabled: var(--fui-white-a7); /* must read dimmer than the enabled border */
+
+  /* Ghost tints — the light Neutral/100|300 and Danger/100|300 fills paint a
+     near-white flash over ink; the dark sets tint the ink instead. */
+  --fui-action-ghost-hover: var(--fui-white-a12);
+  --fui-action-ghost-active: var(--fui-white-a20);
+  --fui-action-ghost-danger-hover: var(--fui-danger-a15);
+  --fui-action-ghost-danger-active: var(--fui-danger-a28);
+
+  /* Adornment / affordance inks */
+  --fui-icon-muted: var(--fui-white-a45); /* derived: dark-ink counterpart of Neutral/500 */
+  --fui-action-clear-active: var(--fui-white-a79); /* derived: pressed ink must lighten, not darken, on ink surfaces */
+}

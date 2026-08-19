@@ -19,6 +19,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs: quality
+    permissions:
+      contents: write # create the GitHub Release
+      id-token: write # mint the OIDC token npm provenance is signed with
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -30,6 +33,7 @@ jobs:
         env:
           CYPRESS_INSTALL_BINARY: '0'
       - run: npm run build
+
       - name: Verify tag matches package.json version
         run: |
           tag_version="${GITHUB_REF_NAME#v}"
@@ -38,8 +42,35 @@ jobs:
             echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version ${manifest_version} — aborting before publish (FR-010)."
             exit 1
           fi
+
+      - name: Verify the changelog documents this version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if ! grep -q "^## \[${version}\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## [${version}]' section — every release ships with notes."
+            exit 1
+          fi
+
+      # `--provenance` publishes a signed, verifiable link from the tarball back
+      # to this workflow run and commit. It needs `id-token: write` above.
       # NPM_TOKEN is referenced here and nowhere else — structurally unreachable
       # from PR-triggered runs (FR-012). Public access is declared in package.json#publishConfig.
-      - run: npm publish
+      - run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create the GitHub Release from the changelog section
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # The lines between this version's heading and the next one.
+          awk -v v="## [${version}]" '
+            $0 ~ v {found=1; next}
+            found && /^## \[/ {exit}
+            found {print}
+          ' CHANGELOG.md > release-notes.md
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file release-notes.md \
+            --verify-tag

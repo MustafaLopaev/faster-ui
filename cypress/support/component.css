@@ -1,0 +1,6 @@
+/* Cypress CT stylesheet — NOT part of the library build.
+   Real compiled token styling for every mounted component (Cypress CT is
+   where the token chain is asserted against computed values), plus the spec
+   files, which use a few layout utilities for harness scaffolding. */
+@import '../../src/tokens/tokens.css';
+@source '../../src/**/*.cy.tsx';

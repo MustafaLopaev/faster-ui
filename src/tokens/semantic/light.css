@@ -1,0 +1,89 @@
+/**
+ * SEMANTICS — light mode (the default, `:root`).
+ *
+ * Purpose names → primitive refs only, never literals. Components consume
+ * these (through the `@theme inline` bridge) and nothing else.
+ * Per-state sources: specs/002-core-components/figma-extraction.md §4.
+ *
+ * ORDERING CONTRACT: `semantic/dark.css` must be imported AFTER this file.
+ * `.dark` and `:root` tie on specificity (0,1,0), so source order decides.
+ */
+:root {
+  /* Action — primary (Button "Primary" set: 600/500/700/300 + white label) */
+  --fui-action-primary: var(--fui-primary-600);
+  --fui-action-primary-hover: var(--fui-primary-500);
+  --fui-action-primary-active: var(--fui-primary-700);
+  --fui-action-primary-disabled: var(--fui-primary-300);
+
+  /* Action — danger (Button danger variants: same scale positions) */
+  --fui-action-danger: var(--fui-danger-600);
+  --fui-action-danger-hover: var(--fui-danger-500);
+  --fui-action-danger-active: var(--fui-danger-700);
+  --fui-action-danger-disabled: var(--fui-danger-300);
+
+  /* Label color on filled action surfaces (all filled Button variants) */
+  --fui-on-action: var(--fui-white);
+
+  /* Action — secondary/outline (Button "Outline" set) */
+  --fui-action-secondary-border: var(--fui-neutral-300);
+  --fui-action-secondary-border-hover: var(--fui-primary-500);
+  --fui-action-secondary-border-active: var(--fui-primary-700);
+  --fui-action-secondary-border-disabled: var(--fui-neutral-200);
+  --fui-action-secondary-text: var(--fui-neutral-600);
+  --fui-action-secondary-text-hover: var(--fui-primary-500);
+  --fui-action-secondary-text-active: var(--fui-primary-700);
+  --fui-action-secondary-text-disabled: var(--fui-neutral-400);
+
+  /* Action — ghost (Button "Ghost" sets: fill tint on hover/pressed only) */
+  --fui-action-ghost-hover: var(--fui-neutral-100); /* Neutral/100 — Ghost Hover fill */
+  --fui-action-ghost-active: var(--fui-neutral-300); /* Neutral/300 — Ghost Pressed fill */
+  --fui-action-ghost-danger-hover: var(--fui-danger-100); /* Danger/100 — Ghost danger Hover fill */
+  --fui-action-ghost-danger-active: var(--fui-danger-300); /* Danger/300 — Ghost danger Pressed fill */
+
+  /* Action — danger outline (Button "Outline" danger set: border = label, per state) */
+  --fui-action-danger-outline: var(--fui-danger-600); /* Danger/600 — Default */
+  --fui-action-danger-outline-hover: var(--fui-danger-500); /* Danger/500 — Hover */
+  --fui-action-danger-outline-active: var(--fui-danger-700); /* Danger/700 — Pressed */
+  --fui-action-danger-outline-disabled: var(--fui-danger-400); /* Danger/400 — Disabled */
+
+  /* Action — link disabled (Link set Disabled: Primary/400, deliberately
+     lighter than the filled disabled Primary/300) */
+  --fui-action-link-disabled: var(--fui-primary-400); /* Primary/400 — Link Disabled */
+
+  /* Action — clear affordance (Input "State 2" axis: circle-x fills) */
+  --fui-action-clear: var(--fui-neutral-400); /* Neutral/400 — rest */
+  --fui-action-clear-hover: var(--fui-neutral-500); /* Neutral/500 — Clear Hover */
+  --fui-action-clear-active: var(--fui-neutral-600); /* Neutral/600 — Clear Pressed */
+
+  /* Feedback (status 600s per Figma status scales; error = Input error border) */
+  --fui-feedback-error: var(--fui-danger-600);
+  --fui-feedback-warning: var(--fui-warning-600);
+  --fui-feedback-success: var(--fui-success-600);
+  --fui-feedback-info: var(--fui-info-600);
+
+  /* Surfaces (Input/Dialog fills; sunken = Input disabled fill Neutral/50) */
+  --fui-surface-page: var(--fui-white);
+  --fui-surface-raised: var(--fui-white);
+  --fui-surface-sunken: var(--fui-neutral-50);
+  --fui-overlay: var(--fui-black-a30);
+
+  /* Text (Light/Fill Color/Text/*; placeholder/disabled from Input states) */
+  --fui-text-color-primary: var(--fui-black-a90);
+  --fui-text-color-secondary: var(--fui-black-a61);
+  --fui-text-color-placeholder: var(--fui-neutral-400);
+  --fui-text-color-disabled: var(--fui-neutral-400);
+  --fui-text-control: var(--fui-neutral-600); /* Neutral/600 — Input value, Dialog body */
+  --fui-text-heading: var(--fui-neutral-700); /* Neutral/700 — Dialog title */
+  --fui-text-placeholder-disabled: var(--fui-neutral-300); /* Neutral/300 — Input Disabled placeholder */
+
+  /* Border & focus (Input: default/disabled borders, focus = Primary/600) */
+  --fui-border-default: var(--fui-neutral-300);
+  --fui-border-subtle: var(--fui-black-a8);
+  --fui-border-disabled: var(--fui-neutral-200);
+  --fui-border-hover: var(--fui-primary-500); /* Primary/500 — Input Hover border */
+  --fui-border-strong: var(--fui-neutral-200); /* Neutral/200 — Dialog divider hairlines */
+  --fui-focus-ring: var(--fui-primary-600);
+
+  /* Icons — control-level adornment ink */
+  --fui-icon-muted: var(--fui-neutral-500); /* Neutral/500 — Dialog close icon; Input adornments at rest */
+}

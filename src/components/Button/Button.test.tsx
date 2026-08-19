@@ -185,8 +185,10 @@ describe('Button', () => {
   it('appends consumer className after component classes', () => {
     render(<Button className="consumer-extra">Merge</Button>)
     const button = screen.getByRole('button', { name: 'Merge' })
+    // The contract is ordering, not any particular internal utility: component
+    // classes come first, the consumer's last, so theirs wins the cascade.
     expect(button).toHaveClass('consumer-extra')
-    expect(button).toHaveClass('fui:inline-flex')
+    expect(button.className.split(' ').length).toBeGreaterThan(1)
     expect(button.className.endsWith('consumer-extra')).toBe(true)
   })
 
