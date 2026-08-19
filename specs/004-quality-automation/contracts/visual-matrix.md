@@ -58,6 +58,10 @@ Each sweep varies **one** axis off the base grid. The rationale per sweep: the o
 
 **States**: `unchanged` · `changed` · `new` (no baseline — must be judged, never silently accepted) · `orphaned` (baseline whose story no longer exists — reported, never silently kept).
 
+**Cold start is its own outcome**, not a run in which every cell happens to be `new`. When `visual/baselines/` is empty nothing has been established, so the pass neither succeeds nor fails: it reports loudly, exits 0, and sets `coldStart: true` in the manifest. Pass 3 is skipped on that flag in both the pull-request path (`visual.yml`'s `cold-start` job condition) and the nightly Batch path.
+
+The reasoning is the one FR-032 applies to the drift watcher's `unreachable`: an all-clear a check did not establish is worse than no report, and a failure it cannot substantiate is noise that blocks every pull request until someone mutes it. The cost matters too — judging all 239 cells against nothing to compare them to is roughly the price of a nightly full sweep, spent to characterise a change that has not happened. Baselines land first, via `gh workflow run visual.yml -f accept-baselines=true`; from then on Pass 3 sees only the cells a change actually moved.
+
 This pass is **deterministic and blocking** once baselines stabilise. It needs no credential and runs for forks.
 
 ## Pass 3 — Judge
