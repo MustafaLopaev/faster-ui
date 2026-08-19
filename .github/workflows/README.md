@@ -134,3 +134,32 @@ Used by: `visual-capture`, `visual-compare`, `visual-judge`.
 `**.md`, `specs/**`, `docs/**`, `LICENSE`, `.github/**` on its own. A change
 touching only these executes no 004 check and still receives a verdict — every
 filtered job reports success rather than being absent from the run summary.
+
+---
+
+## The comment tool must stay in `allowedTools`
+
+Every model-driven job lists `mcp__github_comment__update_claude_comment` in its
+`--allowedTools`. It looks like a write tool sitting in a read-only allowlist,
+and it is the obvious thing to "tidy away" during a security pass. Do not.
+
+Restricting `--allowedTools` replaces the action's default set entirely,
+including its own comment tool. Without it the agent runs, reads the diff,
+reaches a verdict — and has no way to say so. Verified the hard way on PR #9:
+`token-audit` completed cleanly in 31 turns and $1.50, `constitution-review`
+burned 61 turns, $2.92 and eight permission denials retrying a tool it was not
+allowed to call, and **zero comments appeared on the pull request**. Three jobs
+reported success while producing nothing.
+
+This does not weaken injection hardening measure 1. That measure is about a job
+being unable to modify the repository — no `contents: write`, no file-write
+tools, no push. Posting a comment is the job's entire output, and the
+`pull-requests: write` permission that allows it is granted deliberately.
+Findings F-9 in `specs/004-quality-automation/findings.md`.
+
+## Large diffs
+
+`constitution-review` reads `git diff --stat` first and then individual files.
+Piping is not in the allowed command set (`Bash(git diff:*)` matches a command
+that *starts with* `git diff`, so `git diff … | head` is denied), and dumping a
+10,000-line diff in one turn exhausts the budget before anything is judged.
