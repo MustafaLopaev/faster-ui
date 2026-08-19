@@ -123,7 +123,7 @@ flow (spec US4 scenarios 1–4).
 
 **Independent Test**: The journey spec passes with zero pointer events.
 
-- [ ] T026 [US4] Cypress keyboard-only journey spec in src/components/Dialog/Dialog.journey.cy.tsx: Tab to trigger Button → Enter opens Dialog (focus inside) → Tab cycle stays trapped → type into Input → submit invalid → `aria-invalid` + message asserted → fix value → Escape → `onClose` → focus restored to trigger; assert visible `focus-ring` on each stop; zero pointer events used
+- [X] T026 [US4] Cypress keyboard-only journey spec in src/components/Dialog/Dialog.journey.cy.tsx: Tab to trigger Button → Enter opens Dialog (focus inside) → Tab cycle stays trapped → type into Input → submit invalid → `aria-invalid` + message asserted → fix value → Escape → `onClose` → focus restored to trigger; assert visible `focus-ring` on each stop; zero pointer events used
 
 **Checkpoint**: US4 journey green — accessibility composition proven
 
