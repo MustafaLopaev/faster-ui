@@ -1,0 +1,19 @@
+{
+  "name": "fui-consumer-ts-resolution",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Consumer fixture: does the package's `exports` map resolve under every TypeScript module-resolution mode a consumer might use? NOT a workspace.",
+  "scripts": {
+    "check": "tsc -p tsconfig.bundler.json && tsc -p tsconfig.node16.json && tsc -p tsconfig.nodenext.json"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "typescript": "6.0.3"
+  }
+}
