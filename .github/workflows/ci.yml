@@ -86,7 +86,7 @@ jobs:
           CYPRESS_INSTALL_BINARY: '0'
       # Coverage thresholds live in jest.config.ts and fail the run on their own.
       - run: npm run test:coverage
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage

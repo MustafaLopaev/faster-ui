@@ -81,7 +81,7 @@ jobs:
       # before:run hook, so a server started in the config is always too late).
       - run: npm run build-storybook
       - run: npm run visual:capture
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: visual-current
           path: visual/current/
@@ -120,7 +120,7 @@ jobs:
           exit $status
       # Diffs and the manifest are the reviewable evidence — uploaded even when
       # the step above failed, which is exactly when they are wanted.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: visual-diff
@@ -248,7 +248,7 @@ jobs:
         run: node scripts/visual-batch-judge.mjs
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: nightly-visual
