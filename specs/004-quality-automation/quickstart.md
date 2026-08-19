@@ -162,13 +162,32 @@ npm run visual:capture && npm run visual:accept   # first run only
 git add visual/baselines && git commit -m "test: visual baselines"
 ```
 
-**Verify stability before trusting anything** (SC-006) — run `visual:capture && visual:compare` ten times on the unchanged commit. **Expect zero changed cells, all ten times.** Any drift here means the anti-flake protocol is incomplete: check animation zeroing, `document.fonts.ready`, and caret suppression (research R-3). Do not proceed until this is clean; an unstable baseline makes every later result meaningless.
+**Establish them on the runner, not here** — baselines are valid for `ubuntu-latest` only, and `npm run visual:accept` refuses to run elsewhere without `--force`:
 
-**Break it** — narrow a Button's `min-width` so its label clips at 200% scaling.
+```
+gh workflow run visual.yml -f accept-baselines=true
+```
 
-**Expect**: the scaling-sweep cells at 360 report `changed`; the jury returns `FAIL` with a defect naming *clipping*, not "differs from baseline". Base-grid cells at 100% stay `unchanged` — only the affected slice is reported.
+That job captures, accepts, then runs the stability check itself and refuses to open the pull request on any drift.
 
-**Verify the credential-absent path (US4 scenario 7)**: unset the secret and re-run. Comparison still runs and still reports the changed cells; only judgment is skipped. A visual check that goes blind without a credential would be useless to forks.
+**Verify stability before trusting anything** (SC-006) — ten `visual:capture && visual:compare` cycles on the unchanged commit. **Expect zero changed cells, all ten times** *(verified: 10/10 clean)*. Any drift means the anti-flake protocol is incomplete. The two causes found during implementation, both of which looked fine at first:
+
+- `#storybook-root` **exists** long before the story renders into it, so waiting on existence alone captures partly-rendered frames;
+- the **CDP pointer persists across visits**, so whichever Button sat under it rendered in `:hover`. Button cells drifted and Input and Dialog cells did not — that asymmetry is what identified it.
+
+Before the fixes, ~50 of 239 cells drifted per run. Do not proceed until this is clean; an unstable baseline makes every later result meaningless.
+
+**Break it** — pin a Button's height in pixels so the box stops scaling with the rem-based type ramp:
+
+```ts
+md: 'fui:h-[36px] fui:overflow-hidden fui:px-2 …'   // was fui:h-9 — identical at 100%
+```
+
+**Expect** *(all verified)*: exactly **14 cells** change, every one of them `-360-200-` — the scaling sweep. The other 225, including every base-grid cell at 100%, stay `unchanged`, because at 100% `h-[36px]` and `h-9` render identically. `visual/report.json#toJudge` contains those 14 and nothing else (FR-026). The jury returns `FAIL` naming *clipping*, not "differs from baseline".
+
+> An earlier draft asked for the `min-width` to be *narrowed*. That cannot clip in this token layer: `min-w-*`, `h-*` and the type ramp are all rem-based, so at 200% they scale together and a narrower button is simply a narrower button. A px-pinned box against a rem ramp is the defect that actually only bites at 200% — and `npm run lint:tokens` catches the arbitrary value independently, which is what having both gates is for.
+
+**Verify the credential-absent path (US4 scenario 7)** *(verified)*: with `ANTHROPIC_API_KEY` unset, `npm run visual:compare` still ran and still reported all 14 changed cells, and `scripts/visual-batch-judge.mjs` exited 0 with *"skipping judgment — the comparison already ran"*. Only judgment is skipped. A visual check that goes blind without a credential would be useless to exactly the contributors who most need it.
 
 ---
 
