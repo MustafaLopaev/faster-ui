@@ -4,3 +4,5 @@
 @import '../src/tokens/tokens.css';
 @source '../src/**/*.stories.tsx';
 @source './preview.tsx';
+/* Adversarial-content fixtures live under visual/ (see main.ts). */
+@source '../visual/**/*.stories.tsx';
