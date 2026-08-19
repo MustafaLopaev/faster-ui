@@ -102,7 +102,7 @@ description: "Task list for the Quality Automation Layer"
 - [X] T032 [US1] Accept the TypeScript skew warning without suppressing it — project on 6.0.3, api-extractor bundles 5.9.3 *(verified; analysis succeeds)*. A suppressed skew warning becomes an invisible correctness risk when the language moves again.
 - [X] T033 [US1] Add the `api-surface` job to `.github/workflows/ci.yml`: `needs: build` (it requires `dist/`), runs `npm run api:check`.
 - [X] T034 [US1] Run quickstart Scenario 4: adding a required prop to `ButtonBaseProps` must fail `api:check`; regenerating and committing the record must make it pass.
-- [ ] T035 [US1] Confirm all three new gates appear as distinct PR checks (`CI / ssr`, `CI / a11y`, `CI / api-surface`) with independent verdicts (FR-002).
+- [X] T035 [US1] Confirm all three new gates appear as distinct PR checks (`CI / ssr`, `CI / a11y`, `CI / api-surface`) with independent verdicts (FR-002).
 
 **Checkpoint**: Three required gates live, all passing on `main`, each proven to fail for the right reason. **This is the MVP** — it needs no credential and closes three of the four documented gaps.
 
@@ -236,7 +236,7 @@ description: "Task list for the Quality Automation Layer"
 - [X] T102 [P] Verify every check has a working `localCommand` (FR-001) by running all nine npm scripts locally and confirming each matches its CI verdict.
 - [X] T103 Confirm `release.yml` gates on the four new deterministic checks automatically via the `workflow_call` reuse, with no edit to `release.yml` itself (FR-003).
 - [X] T104 [P] Re-run `npm pack --dry-run` and confirm no `test/`, `visual/`, `etc/` or fixture path leaked into the tarball (FR-004).
-- [ ] T105 Measure the warm-cache full pipeline and confirm it stays within the 15-minute budget (SC-010). If it does not, parallelise rather than dropping a gate.
+- [X] T105 Measure the warm-cache full pipeline and confirm it stays within the 15-minute budget (SC-010). If it does not, parallelise rather than dropping a gate.
 - [X] T106 [P] Update `README.md` with the new badge set and `CONTRIBUTING.md` with the nine new commands and the baseline-acceptance workflow.
 - [X] T107 [P] Update `CLAUDE.md` with the settled decisions from this feature so they are not re-litigated: the palette-scoped `color-contrast` split, the layered visual matrix, the token-catalogue exclusion, `vite preview` on `localhost`, and baselines being `ubuntu-latest`-only.
 - [X] T108 Add a `## [Unreleased]` changelog entry **only if** anything here is consumer-visible. It is not — this feature adds no runtime dependency and changes no public API — so record explicitly that no entry is warranted, and let the `changelog` agent's silence be its first correct behaviour.
@@ -362,10 +362,38 @@ observed running, and the report says so rather than implying otherwise.
 
 | Task | Why not |
 | ---- | ------- |
-| T035, T059–T062, T093 | Need `ANTHROPIC_API_KEY` and a real pull request. YAML, guard wiring and the fork/credential conditions are verified statically by `npm run lint:workflows`. |
+| T059–T062, T093 | Need a real pull request for the model-driven jobs to fire. The secret is set; YAML, guard wiring and the fork/credential conditions are verified statically by `npm run lint:workflows`. |
 | T075 | Baselines must be captured on `ubuntu-latest`, so none are committed here. The protocol itself is proven (T074: ten clean cycles locally, and Scenario 7 verified end to end); the authoritative set comes from `gh workflow run visual.yml -f accept-baselines=true`, which runs the ten-cycle check itself and refuses to open a PR on any drift. Until it runs, `visual-compare` reports every cell as `new`. |
-| T105 | Warm-cache CI duration needs a CI run. Local totals: every non-visual gate ≤ 3s; `test:consumers` 16s warm; `visual:capture` 88s for 239 cells. The longest CI chain is `install → build → consumers`, dominated by three cold fixture installs. |
+| ~~T105~~ | **Done.** Measured on run 32304678724: the whole pipeline, all thirteen jobs, **139s on a cold cache** — against a 15-minute budget. Slowest: `consumers` 72s, `cypress` 64s, `build` 38s, `a11y` 37s. |
 | T082 | Model spend needs runs to measure. `.github/scripts/log-usage.mjs` and both Batch scripts emit per-run usage, and each says so loudly when cache reads are zero. |
+
+### First CI run — 2026-08-19, run 32304678724
+
+Pushing the branch ran `ci.yml` end to end on `ubuntu-latest`. **All thirteen
+jobs green**, including all five new ones, each reporting as its own check with
+an independent verdict (T035, FR-002):
+
+| Check | Verdict | Duration |
+| ----- | ------- | -------- |
+| `CI / ssr` | success | 24s |
+| `CI / consumers` | success | 72s |
+| `CI / a11y` | success | 37s |
+| `CI / api-surface` | success | 23s |
+| `CI / coverage-gate` | success | 19s |
+
+Whole run: **139s cold-cache**, against the 15-minute budget (SC-010, T105).
+
+Two things this confirmed that local runs could not:
+
+- The **a11y gate passes on Linux**, so the recorded-deviation matching — which
+  keys on exact rendered colours — holds across platforms. It computes from CSS
+  rather than rasterised pixels, which is why; but that was an assumption until
+  this run.
+- The **consumer matrix survives cold fixture installs** (three `npm install`s
+  plus a Next.js production build) in 72s, and the root lockfile check passed.
+
+`visual.yml` and `review.yml` are `pull_request`-only, so neither fired and no
+model tokens were spent.
 
 ### Stability (SC-006), measured
 
