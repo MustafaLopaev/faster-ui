@@ -1,0 +1,15 @@
+/**
+ * PRIMITIVES — geometry (radius + spacing).
+ *
+ * Radius comes from Figma component geometry: Button/Input radius 4; the
+ * Dialog panel's corners were re-verified per node at [4,4,4,4] on every
+ * set/size (the earlier 8px reading was the demo artboard frame, not the
+ * panel — `--fui-radius-8` was deleted with it, no consumer remains).
+ */
+:root {
+  --fui-radius-4: 0.25rem; /* 4px — Button + Input + Dialog panel corner radius */
+  --fui-radius-pill: 999px; /* pill/circular shapes */
+
+  /* Figma 4px grid — every observed component pad/gap is a multiple of this. */
+  --fui-spacing-unit: 0.25rem; /* 4px */
+}

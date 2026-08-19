@@ -1,0 +1,9 @@
+/**
+ * PRIMITIVES — elevation (Figma effect styles "Elevation/1..4").
+ */
+:root {
+  --fui-elevation-1: 0 2px 4px 0 rgb(0 0 0 / 0.04), 0 1px 1px 0 rgb(0 0 0 / 0.02); /* Elevation/1 */
+  --fui-elevation-2: 0 4px 10px 0 rgb(0 0 0 / 0.08), 0 1px 4px 0 rgb(0 0 0 / 0.04); /* Elevation/2 */
+  --fui-elevation-3: 0 8px 32px 0 rgb(0 0 0 / 0.08), 0 2px 20px 0 rgb(0 0 0 / 0.04); /* Elevation/3 */
+  --fui-elevation-4: 0 24px 60px 0 rgb(0 0 0 / 0.12), 0 8px 20px 0 rgb(0 0 0 / 0.06); /* Elevation/4 */
+}

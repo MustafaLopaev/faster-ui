@@ -1,0 +1,114 @@
+/**
+ * OPT-IN WCAG 2.1 AA OVERLAY.
+ *
+ * WHY THIS FILE EXISTS
+ * The TapTap palette is the design source of record, and the Definition of
+ * Done requires matching it. Several of its pairs do not reach WCAG 2.1 AA —
+ * most visibly a white label on Primary/600, which measures 2.12:1 where
+ * 1.4.3 requires 4.5:1. Constitution Principle II makes AA non-negotiable.
+ * Silently darkening the brand would break Figma fidelity; silently shipping
+ * 2.12:1 would break Principle II. This overlay resolves the conflict without
+ * choosing for the consumer:
+ *
+ *   import '@mlopaev/faster-ui/styles.css'   // Figma-faithful (default)
+ *   import '@mlopaev/faster-ui/a11y.css'     // ← raises the palette to AA
+ *
+ * It re-points SEMANTIC tokens only, so it composes with `.dark` exactly like
+ * the base layer and requires zero component changes. Every ratio below is
+ * asserted in `src/tokens/tokens.test.ts` — the numbers cannot drift silently.
+ *
+ * Disabled-state tokens are deliberately left alone: WCAG 1.4.3 and 1.4.11
+ * both exempt inactive user-interface components.
+ */
+
+:root {
+  /* ── AA primitives ──────────────────────────────────────────────────────
+     Same hue and saturation as the TapTap ramps, lightness solved so each
+     step clears its target against white. The interaction ramp necessarily
+     DARKENS (a lighter step cannot carry a white label at 4.5:1). */
+  --fui-primary-aa: #0e8288; /* 4.60:1 vs white — Primary/600 at AA lightness */
+  --fui-primary-aa-hover: #0c6f74; /* 5.93:1 */
+  --fui-primary-aa-active: #0a5f64; /* 7.41:1 */
+  --fui-danger-aa: #ea0c0c; /* 4.61:1 vs white — Danger/600 at AA lightness */
+  --fui-danger-aa-hover: #ca0a0a; /* 5.90:1 */
+  --fui-danger-aa-active: #ae0909; /* 7.39:1 */
+  --fui-warning-aa: #a06a00; /* 4.61:1 — Warning/600 at AA lightness */
+  --fui-success-aa: #33835c; /* 4.62:1 — Success/600 at AA lightness */
+  --fui-info-aa: #1b6df5; /* 4.61:1 — Info/600 at AA lightness */
+  --fui-neutral-aa-ink: #757575; /* 4.61:1 — placeholder ink */
+  --fui-neutral-aa-border: #929292; /* 3.11:1 — control boundary (1.4.11) */
+
+  /* ── Filled actions: the label is white, so the fill carries the ratio ── */
+  --fui-action-primary: var(--fui-primary-aa);
+  --fui-action-primary-hover: var(--fui-primary-aa-hover);
+  --fui-action-primary-active: var(--fui-primary-aa-active);
+  --fui-action-danger: var(--fui-danger-aa);
+  --fui-action-danger-hover: var(--fui-danger-aa-hover);
+  --fui-action-danger-active: var(--fui-danger-aa-active);
+
+  /* ── Brand ink roles (link labels, outline/ghost hover + pressed text) ── */
+  --fui-action-secondary-text-hover: var(--fui-primary-aa);
+  --fui-action-secondary-text-active: var(--fui-primary-aa-active);
+  --fui-action-secondary-border-hover: var(--fui-primary-aa);
+  --fui-action-secondary-border-active: var(--fui-primary-aa-active);
+  --fui-action-danger-outline: var(--fui-danger-aa);
+  --fui-action-danger-outline-hover: var(--fui-danger-aa-hover);
+  --fui-action-danger-outline-active: var(--fui-danger-aa-active);
+
+  /* ── Boundaries and focus (1.4.11 non-text contrast, 2.4.11 focus) ────── */
+  --fui-action-secondary-border: var(--fui-neutral-aa-border);
+  --fui-border-default: var(--fui-neutral-aa-border);
+  --fui-border-hover: var(--fui-primary-aa);
+  --fui-focus-ring: var(--fui-primary-aa);
+
+  /* ── Inks that carry meaning ──────────────────────────────────────────── */
+  --fui-text-color-placeholder: var(--fui-neutral-aa-ink);
+  --fui-action-clear: var(--fui-neutral-aa-border); /* the clear glyph is a control, not decoration (1.4.11) */
+  --fui-feedback-error: var(--fui-danger-aa);
+  --fui-feedback-warning: var(--fui-warning-aa);
+  --fui-feedback-success: var(--fui-success-aa);
+  --fui-feedback-info: var(--fui-info-aa);
+}
+
+/**
+ * Dark mode.
+ *
+ * A filled control on a near-black page cannot satisfy both 1.4.3 (white
+ * label ≥ 4.5:1 → dark fill) and 1.4.11 (fill vs page ≥ 3:1 → light fill).
+ * The standard resolution applies: on ink surfaces the brand fills INVERT to
+ * a light fill with a dark label, and every brand ink role moves to the
+ * bright end of the ramp.
+ */
+.dark {
+  /* Inverted filled actions: light fill, dark label */
+  --fui-on-action: var(--fui-neutral-700);
+  --fui-action-primary: var(--fui-primary-400);
+  --fui-action-primary-hover: var(--fui-primary-300);
+  --fui-action-primary-active: var(--fui-primary-500);
+  --fui-action-danger: var(--fui-danger-400);
+  --fui-action-danger-hover: var(--fui-danger-300);
+  --fui-action-danger-active: var(--fui-danger-500);
+
+  /* Brand ink roles move to the bright end of the ramp */
+  --fui-action-secondary-text-hover: var(--fui-primary-400);
+  --fui-action-secondary-text-active: var(--fui-primary-500);
+  --fui-action-secondary-border-hover: var(--fui-primary-400);
+  --fui-action-secondary-border-active: var(--fui-primary-500);
+  --fui-action-danger-outline: var(--fui-danger-400);
+  --fui-action-danger-outline-hover: var(--fui-danger-300);
+  --fui-action-danger-outline-active: var(--fui-danger-500);
+
+  /* Boundaries and focus on ink */
+  --fui-action-secondary-border: var(--fui-white-a45);
+  --fui-border-default: var(--fui-white-a45);
+  --fui-border-strong: var(--fui-white-a45);
+  --fui-border-hover: var(--fui-primary-400);
+  --fui-focus-ring: var(--fui-primary-400);
+
+  /* Inks that carry meaning */
+  --fui-text-color-placeholder: var(--fui-white-a55);
+  --fui-feedback-error: var(--fui-danger-400);
+  --fui-feedback-warning: var(--fui-warning-500);
+  --fui-feedback-success: var(--fui-success-500);
+  --fui-feedback-info: var(--fui-info-400);
+}

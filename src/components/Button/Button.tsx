@@ -14,7 +14,8 @@ interface ButtonBaseProps extends ComponentPropsWithoutRef<'button'> {
   loading?: boolean
 }
 
-interface TextButtonProps extends ButtonBaseProps {
+/** The Button API for every non-`iconOnly` usage. */
+export interface TextButtonProps extends ButtonBaseProps {
   iconOnly?: false
   /** Visual style; maps 1:1 to the Figma text-button sets. */
   variant?: 'primary' | 'outline' | 'ghost' | 'link'
@@ -26,7 +27,8 @@ interface TextButtonProps extends ButtonBaseProps {
   rightIcon?: ReactNode
 }
 
-interface IconOnlyButtonProps extends ButtonBaseProps {
+/** The Button API for circular icon-only usage — `aria-label` is required. */
+export interface IconOnlyButtonProps extends ButtonBaseProps {
   /** Circular icon button (Figma icon-only sets); children are the icon. */
   iconOnly: true
   // Figma defines icon-only sets only for these three variants in the
@@ -114,7 +116,14 @@ const ICON_ONLY_VARIANT: Record<'primary' | 'outline' | 'ghost', string> = {
 
 function Spinner() {
   return (
-    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="fui:animate-spin fui:size-full">
+    // `motion-reduce:animate-none` honours prefers-reduced-motion (WCAG 2.3.3):
+    // the spinner still marks the busy slot, it just stops rotating.
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      className="fui:animate-spin fui:motion-reduce:animate-none fui:size-full"
+    >
       <path d="M14 8a6 6 0 1 1-6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
@@ -204,3 +213,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     </button>
   )
 })
+
+// Explicit: `forwardRef` leaves `displayName` undefined, which some test
+// renderers and snapshot serialisers surface as `ForwardRef`.
+Button.displayName = 'Button'

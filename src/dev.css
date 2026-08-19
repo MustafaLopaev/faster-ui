@@ -1,0 +1,6 @@
+/* Dev-playground stylesheet — NOT part of the library build.
+   Pulls in the real token layer, then widens Tailwind's source scope to the
+   playground itself. `tokens.css` deliberately scans only the components, so
+   the published stylesheet never carries playground utilities. */
+@import './tokens/tokens.css';
+@source './main.tsx';

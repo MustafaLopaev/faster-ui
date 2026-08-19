@@ -1,0 +1,6 @@
+/* Storybook stylesheet — NOT part of the library build.
+   Same token layer the components ship with, plus the story files, so the
+   workbench can use layout utilities the library itself never needs. */
+@import '../src/tokens/tokens.css';
+@source '../src/**/*.stories.tsx';
+@source './preview.tsx';
