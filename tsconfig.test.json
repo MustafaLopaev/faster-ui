@@ -4,7 +4,7 @@
     "target": "es2023",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "esnext",
-    "types": ["jest", "vite/client"],
+    "types": ["jest", "node", "vite/client"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
 
@@ -25,6 +25,7 @@
   },
   "include": [
     "src/main.tsx",
+    "src/**/*.test.ts",
     "src/**/*.test.tsx",
     "src/**/*.stories.tsx",
     "jest.setup.ts",

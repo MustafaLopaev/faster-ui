@@ -1,0 +1,113 @@
+/**
+ * PRIMITIVES — colour.
+ *
+ * Raw palette values, each defined exactly once, each traceable to a Figma
+ * paint style or carrying a deviation rationale. Deliberately NOT declared in
+ * `@theme`, so no primitive utility is ever generated: components cannot
+ * reach these directly (Constitution Principle I).
+ *
+ * The full 50..700 scales are kept even where no semantic currently consumes
+ * them — they are the published palette a consumer re-points when rebranding
+ * (see the theming contract in README.md).
+ */
+:root {
+  /* Black & White (Figma paint styles "Black & White/*") */
+  --fui-white: #ffffff; /* Black & White/White */
+  --fui-black: #000000; /* Black & White/Black */
+
+  /* Neutral scale (Figma "Neutral/50..700") */
+  --fui-neutral-50: #fafafa; /* Neutral/50 */
+  --fui-neutral-100: #f5f5f5; /* Neutral/100 */
+  --fui-neutral-200: #eeeeee; /* Neutral/200 */
+  --fui-neutral-300: #e1e1e1; /* Neutral/300 */
+  --fui-neutral-400: #cacaca; /* Neutral/400 */
+  --fui-neutral-500: #8e8e8e; /* Neutral/500 */
+  --fui-neutral-600: #4b4b4b; /* Neutral/600 */
+  --fui-neutral-700: #1f1f1f; /* Neutral/700 */
+
+  /* Primary — TapTap teal (Figma "Primary/50..700") */
+  --fui-primary-50: #f9ffff; /* Primary/50 */
+  --fui-primary-100: #eefcfc; /* Primary/100 */
+  --fui-primary-200: #dff7f7; /* Primary/200 */
+  --fui-primary-300: #b0ebec; /* Primary/300 */
+  --fui-primary-400: #7ddde1; /* Primary/400 */
+  --fui-primary-500: #47cfd6; /* Primary/500 */
+  --fui-primary-600: #15c5ce; /* Primary/600 */
+  --fui-primary-700: #00abb6; /* Primary/700 */
+
+  /* Auxiliary — TapTap orange (Figma "Auxiliary/50..700") */
+  --fui-auxiliary-50: #fffcfc; /* Auxiliary/50 */
+  --fui-auxiliary-100: #fff6f3; /* Auxiliary/100 */
+  --fui-auxiliary-200: #fff2ee; /* Auxiliary/200 */
+  --fui-auxiliary-300: #ffe1d6; /* Auxiliary/300 */
+  --fui-auxiliary-400: #ffc8b6; /* Auxiliary/400 */
+  --fui-auxiliary-500: #ffa487; /* Auxiliary/500 */
+  --fui-auxiliary-600: #ff8156; /* Auxiliary/600 */
+  --fui-auxiliary-700: #fe632f; /* Auxiliary/700 */
+
+  /* Danger (Figma "Danger/50..700") */
+  --fui-danger-50: #fffbfb; /* Danger/50 */
+  --fui-danger-100: #fef2f2; /* Danger/100 */
+  --fui-danger-200: #ffebee; /* Danger/200 */
+  --fui-danger-300: #ffccd2; /* Danger/300 */
+  --fui-danger-400: #f49898; /* Danger/400 */
+  --fui-danger-500: #eb6f70; /* Danger/500 */
+  --fui-danger-600: #f64c4c; /* Danger/600 */
+  --fui-danger-700: #ec2d30; /* Danger/700 */
+
+  /* Warning (Figma "Warning/50..700") */
+  --fui-warning-50: #fffdfa; /* Warning/50 */
+  --fui-warning-100: #fff9ee; /* Warning/100 */
+  --fui-warning-200: #fff7e1; /* Warning/200 */
+  --fui-warning-300: #ffeab3; /* Warning/300 */
+  --fui-warning-400: #ffdd82; /* Warning/400 */
+  --fui-warning-500: #ffc62b; /* Warning/500 */
+  --fui-warning-600: #ffad0d; /* Warning/600 */
+  --fui-warning-700: #fe9b0e; /* Warning/700 */
+
+  /* Success (Figma "Success/50..700") */
+  --fui-success-50: #fbfefc; /* Success/50 */
+  --fui-success-100: #f2faf6; /* Success/100 */
+  --fui-success-200: #e5f5ec; /* Success/200 */
+  --fui-success-300: #c0e5d1; /* Success/300 */
+  --fui-success-400: #97d4b4; /* Success/400 */
+  --fui-success-500: #6bc497; /* Success/500 */
+  --fui-success-600: #47b881; /* Success/600 */
+  --fui-success-700: #0c9d61; /* Success/700 */
+
+  /* Info (Figma "Info/50..700") */
+  --fui-info-50: #f8fcff; /* Info/50 */
+  --fui-info-100: #f1f8ff; /* Info/100 */
+  --fui-info-200: #e4f2ff; /* Info/200 */
+  --fui-info-300: #bdddff; /* Info/300 */
+  --fui-info-400: #93c8ff; /* Info/400 */
+  --fui-info-500: #4ba1ff; /* Info/500 */
+  --fui-info-600: #3b82f6; /* Info/600 */
+  --fui-info-700: #3a70e2; /* Info/700 */
+
+  /* Dark-mode ink surfaces */
+  --fui-ink-900: #1d2127; /* Figma 基础色板/Neutral/7 (TapTap dark ink) */
+  --fui-ink-800: #262b33; /* DERIVED: one elevation step above ink-900; no Dark surface style readable in the file */
+
+  /* Alpha composites — light set (Figma "Light/*" library styles) */
+  --fui-black-a90: rgb(0 0 0 / 0.9); /* Light/Fill Color/Text/Primary (#000 @ 90%) */
+  --fui-black-a61: rgb(0 0 0 / 0.61); /* Light/Fill Color/Text/Secondary (#000 @ 61%) */
+  --fui-black-a30: rgb(0 0 0 / 0.3); /* Light|Dark/Background/Fill Color/Smoke/Default (#000 @ 30%, both modes) */
+  --fui-black-a8: rgb(0 0 0 / 0.08); /* Light/Stroke Color/Divider Stroke/Default (#000 @ 8%) */
+
+  /* Alpha composites — dark set (Figma "Dark/*" where readable, rest derived) */
+  --fui-white-a90: rgb(255 255 255 / 0.9); /* DERIVED: mirrors Light/Text/Primary alpha; no Dark/Fill Color/Text/Primary readable */
+  --fui-white-a79: rgb(255 255 255 / 0.79); /* Dark/Fill Color/Text/Secondary (#FFF @ 79%) */
+  --fui-white-a55: rgb(255 255 255 / 0.55); /* DERIVED: ink that clears 4.5:1 on dark surfaces (WCAG 1.4.3) */
+  --fui-white-a45: rgb(255 255 255 / 0.45); /* DERIVED: control stroke that clears 3:1 on ink (WCAG 1.4.11) */
+  --fui-white-a30: rgb(255 255 255 / 0.3); /* DERIVED: disabled/placeholder ink on dark; follows the white-alpha dark pattern */
+  --fui-white-a12: rgb(255 255 255 / 0.12); /* DERIVED: ghost hover tint on ink surfaces */
+  --fui-white-a20: rgb(255 255 255 / 0.2); /* DERIVED: ghost pressed tint on ink surfaces */
+  --fui-white-a7: rgb(255 255 255 / 0.07); /* Dark/Stroke Color/Control Stroke/Default (#FFF @ 7%) */
+  --fui-white-a4: rgb(255 255 255 / 0.04); /* DERIVED: sunken fill on dark; follows the white-alpha dark pattern */
+
+  /* Danger tints for ink surfaces — the light Danger/100|300 ghost fills read
+     as a near-white flash on dark, so the dark sets tint the ink instead. */
+  --fui-danger-a15: rgb(246 76 76 / 0.15); /* DERIVED from Danger/600: ghost danger Hover fill on ink */
+  --fui-danger-a28: rgb(246 76 76 / 0.28); /* DERIVED from Danger/600: ghost danger Pressed fill on ink */
+}

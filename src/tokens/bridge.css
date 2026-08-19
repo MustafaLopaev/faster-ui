@@ -1,0 +1,103 @@
+/**
+ * BRIDGE — the only utility-generating token surface.
+ *
+ * `inline` keeps the `var()` references live at the use site, so the `.dark`
+ * re-declarations (and any consumer override of a `--fui-*` variable) flip
+ * rendered values at runtime with zero component involvement. That is what
+ * makes the published stylesheet re-themable without a rebuild — see the
+ * theming contract in README.md.
+ *
+ * Every semantic below must appear exactly once here, and every entry here
+ * must resolve to a declared semantic. `src/tokens/tokens.test.ts` asserts
+ * both directions, so a token added to `semantic/*.css` without a bridge line
+ * (which would silently generate no utility at all) fails the suite.
+ *
+ * MUST be imported after `reset.css`.
+ */
+@theme inline {
+  /* Colors → fui:bg-*, fui:text-*, fui:border-*, fui:outline-* … */
+  --color-action-primary: var(--fui-action-primary);
+  --color-action-primary-hover: var(--fui-action-primary-hover);
+  --color-action-primary-active: var(--fui-action-primary-active);
+  --color-action-primary-disabled: var(--fui-action-primary-disabled);
+  --color-action-danger: var(--fui-action-danger);
+  --color-action-danger-hover: var(--fui-action-danger-hover);
+  --color-action-danger-active: var(--fui-action-danger-active);
+  --color-action-danger-disabled: var(--fui-action-danger-disabled);
+  --color-on-action: var(--fui-on-action);
+  --color-action-secondary-border: var(--fui-action-secondary-border);
+  --color-action-secondary-border-hover: var(--fui-action-secondary-border-hover);
+  --color-action-secondary-border-active: var(--fui-action-secondary-border-active);
+  --color-action-secondary-border-disabled: var(--fui-action-secondary-border-disabled);
+  --color-action-secondary-text: var(--fui-action-secondary-text);
+  --color-action-secondary-text-hover: var(--fui-action-secondary-text-hover);
+  --color-action-secondary-text-active: var(--fui-action-secondary-text-active);
+  --color-action-secondary-text-disabled: var(--fui-action-secondary-text-disabled);
+  --color-action-ghost-hover: var(--fui-action-ghost-hover);
+  --color-action-ghost-active: var(--fui-action-ghost-active);
+  --color-action-ghost-danger-hover: var(--fui-action-ghost-danger-hover);
+  --color-action-ghost-danger-active: var(--fui-action-ghost-danger-active);
+  --color-action-danger-outline: var(--fui-action-danger-outline);
+  --color-action-danger-outline-hover: var(--fui-action-danger-outline-hover);
+  --color-action-danger-outline-active: var(--fui-action-danger-outline-active);
+  --color-action-danger-outline-disabled: var(--fui-action-danger-outline-disabled);
+  --color-action-link-disabled: var(--fui-action-link-disabled);
+  --color-action-clear: var(--fui-action-clear);
+  --color-action-clear-hover: var(--fui-action-clear-hover);
+  --color-action-clear-active: var(--fui-action-clear-active);
+  --color-feedback-error: var(--fui-feedback-error);
+  --color-feedback-warning: var(--fui-feedback-warning);
+  --color-feedback-success: var(--fui-feedback-success);
+  --color-feedback-info: var(--fui-feedback-info);
+  --color-surface-page: var(--fui-surface-page);
+  --color-surface-raised: var(--fui-surface-raised);
+  --color-surface-sunken: var(--fui-surface-sunken);
+  --color-overlay: var(--fui-overlay);
+  --color-text-primary: var(--fui-text-color-primary);
+  --color-text-secondary: var(--fui-text-color-secondary);
+  --color-text-placeholder: var(--fui-text-color-placeholder);
+  --color-text-disabled: var(--fui-text-color-disabled);
+  --color-text-control: var(--fui-text-control);
+  --color-text-heading: var(--fui-text-heading);
+  --color-text-placeholder-disabled: var(--fui-text-placeholder-disabled);
+  --color-border-default: var(--fui-border-default);
+  --color-border-subtle: var(--fui-border-subtle);
+  --color-border-disabled: var(--fui-border-disabled);
+  --color-border-hover: var(--fui-border-hover);
+  --color-border-strong: var(--fui-border-strong);
+  --color-focus-ring: var(--fui-focus-ring);
+  --color-icon-muted: var(--fui-icon-muted);
+
+  /* Radius → fui:rounded-control, fui:rounded-surface, fui:rounded-full */
+  --radius-control: var(--fui-radius-4);
+  --radius-surface: var(--fui-radius-4);
+  --radius-full: var(--fui-radius-pill);
+
+  /* Spacing base → fui:p-*, fui:gap-* … on the Figma 4px grid */
+  --spacing: var(--fui-spacing-unit);
+
+  /* Typography → fui:font-sans, fui:font-regular/medium, fui:text-<ramp> */
+  --font-sans: var(--fui-family-sans);
+  --font-weight-regular: var(--fui-weight-regular);
+  --font-weight-medium: var(--fui-weight-medium);
+  --text-caption: var(--fui-size-caption);
+  --text-caption--line-height: var(--fui-lh-caption);
+  --text-body: var(--fui-size-body);
+  --text-body--line-height: var(--fui-lh-body);
+  --text-subtitle: var(--fui-size-subtitle);
+  --text-subtitle--line-height: var(--fui-lh-subtitle);
+  --text-title: var(--fui-size-title);
+  --text-title--line-height: var(--fui-lh-title);
+  --text-h3: var(--fui-size-h3);
+  --text-h3--line-height: var(--fui-lh-h3);
+  --text-h2: var(--fui-size-h2);
+  --text-h2--line-height: var(--fui-lh-h2);
+  --text-h1: var(--fui-size-h1);
+  --text-h1--line-height: var(--fui-lh-h1);
+
+  /* Elevation → fui:shadow-elevation-1..4 */
+  --shadow-elevation-1: var(--fui-elevation-1);
+  --shadow-elevation-2: var(--fui-elevation-2);
+  --shadow-elevation-3: var(--fui-elevation-3);
+  --shadow-elevation-4: var(--fui-elevation-4);
+}

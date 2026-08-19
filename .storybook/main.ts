@@ -3,7 +3,9 @@ import type { StorybookConfig } from '@storybook/react-vite'
 const config: StorybookConfig = {
   framework: '@storybook/react-vite',
   stories: ['../src/**/*.stories.tsx'],
-  addons: ['@storybook/addon-a11y'],
+  // addon-docs generates the autodocs pages the `autodocs` tag in
+  // preview.tsx asks for; addon-a11y runs axe against every story.
+  addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],
   viteFinal: async (viteConfig) => {
     // The root vite config carries the library build (lib mode + dts);
     // Storybook builds an app from the same config, so drop those pieces.

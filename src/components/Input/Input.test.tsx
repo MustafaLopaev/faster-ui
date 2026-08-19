@@ -198,4 +198,83 @@ describe('Input', () => {
     // The label follows the consumer id
     expect(screen.getByText('Email')).toHaveAttribute('for', 'custom-id')
   })
+
+  // I11 — the number stepper drives the native value, honouring step/min/max
+  it('steps the value with the native stepper semantics and keeps them out of the a11y tree', async () => {
+    const user = userEvent.setup()
+    const onChange = jest.fn()
+    render(
+      <Input label="Quantity" type="number" defaultValue="2" step={2} min={0} max={6} onChange={onChange} />,
+    )
+    const input = screen.getByRole('spinbutton', { name: 'Quantity' }) as HTMLInputElement
+    const up = document.querySelector('[data-stepper=up]') as HTMLButtonElement
+    const down = document.querySelector('[data-stepper=down]') as HTMLButtonElement
+
+    // tabIndex -1 + aria-hidden: keyboard users already have ArrowUp/ArrowDown
+    expect(up).toHaveAttribute('tabindex', '-1')
+    expect(up.closest('[aria-hidden=true]')).not.toBeNull()
+    expect(screen.queryByRole('button', { name: /increment|up/i })).toBeNull()
+
+    await user.click(up)
+    expect(input.value).toBe('4')
+    await user.click(up)
+    expect(input.value).toBe('6')
+    await user.click(up) // clamped by max
+    expect(input.value).toBe('6')
+    await user.click(down)
+    expect(input.value).toBe('4')
+    // Every step reaches the consumer through the normal onChange contract
+    expect(onChange).toHaveBeenCalled()
+    // Stepping keeps focus in the field, never on the (unfocusable) chevron
+    expect(input).toHaveFocus()
+  })
+
+  it('never steps a disabled or readOnly number field', async () => {
+    const user = userEvent.setup()
+    const { rerender } = render(<Input label="Qty" type="number" defaultValue="2" disabled />)
+    const up = () => document.querySelector('[data-stepper=up]') as HTMLButtonElement
+    expect(up()).toBeDisabled()
+
+    rerender(<Input label="Qty" type="number" defaultValue="2" readOnly />)
+    await user.click(up())
+    expect((screen.getByRole('spinbutton', { name: 'Qty' }) as HTMLInputElement).value).toBe('2')
+  })
+
+  it('renders no stepper for any type other than number', () => {
+    render(<Input label="Email" type="email" />)
+    expect(document.querySelector('[data-stepper=up]')).toBeNull()
+  })
+
+  // I12 — clicking the field chrome (padding, adornments) focuses the input
+  it('focuses the input when the wrapper chrome or an adornment is clicked', async () => {
+    const user = userEvent.setup()
+    render(<Input label="Search" leftIcon={<span data-testid="icon" />} />)
+    const input = screen.getByRole('textbox', { name: 'Search' })
+
+    await user.click(input.parentElement as HTMLElement)
+    expect(input).toHaveFocus()
+
+    input.blur()
+    await user.click(screen.getByTestId('icon'))
+    expect(input).toHaveFocus()
+  })
+
+  it('does not focus a disabled input when its wrapper chrome is clicked', async () => {
+    const user = userEvent.setup()
+    render(<Input label="Search" disabled leftIcon={<span data-testid="icon" />} />)
+    const input = screen.getByRole('textbox', { name: 'Search' })
+
+    await user.click(input.parentElement as HTMLElement)
+    expect(input).not.toHaveFocus()
+    await user.click(screen.getByTestId('icon'))
+    expect(input).not.toHaveFocus()
+  })
+
+  // I13 — the clear button must not steal focus away from the field
+  it('does not move focus to the wrapper when the clear affordance is used', async () => {
+    const user = userEvent.setup()
+    render(<Input label="Query" defaultValue="abc" clearable />)
+    await user.click(screen.getByRole('button', { name: 'Clear' }))
+    expect(screen.getByRole('textbox', { name: 'Query' })).toHaveFocus()
+  })
 })

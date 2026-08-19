@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './tokens/tokens.css'
+import './dev.css'
 
 // Dev playground: every visual below uses semantic `fui:` utilities only —
 // flipping `.dark` on <html> (or editing a token) restyles it with zero JSX edits.
@@ -40,7 +40,7 @@ createRoot(document.getElementById('root')!).render(
         </span>
       </section>
 
-      <section className="fui:bg-surface-raised fui:shadow-elevation-2 fui:rounded-surface fui:border fui:border-border-subtle fui:p-6 fui:max-w-md fui:flex fui:flex-col fui:gap-3">
+      <section className="fui:bg-surface-raised fui:shadow-elevation-2 fui:rounded-surface fui:border fui:border-border-subtle fui:p-6 fui:w-90 fui:flex fui:flex-col fui:gap-3">
         <h2 className="fui:text-title fui:font-medium fui:text-text-primary">Raised surface</h2>
         <div className="fui:border fui:border-border-default fui:rounded-control fui:px-3 fui:py-2 fui:text-body fui:text-text-placeholder">
           Input placeholder…

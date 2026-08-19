@@ -170,3 +170,5 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
     </dialog>
   )
 })
+
+Dialog.displayName = 'Dialog'
