@@ -249,6 +249,12 @@ const PAIRS: ReadonlyArray<{ what: string; fg: string; bg: string; min: number }
   { what: 'Input error message', fg: '--fui-feedback-error', bg: '--fui-surface-page', min: 4.5 },
   { what: 'Input error border', fg: '--fui-feedback-error', bg: '--fui-surface-raised', min: 3 },
   { what: 'Input adornment icon', fg: '--fui-icon-muted', bg: '--fui-surface-raised', min: 3 },
+  // The SAME token, rendered as TEXT. Input's `prefix`/`suffix` affixes ("$",
+  // "USD") take the adornment colour, and 1.4.3 asks 4.5:1 of text where 1.4.11
+  // asks 3:1 of a graphic. Split into its own pair because one number cannot
+  // carry two requirements — and because the pair above passing is exactly what
+  // let this one go unnoticed. Found by the 004 axe gate (FR-011).
+  { what: 'Input affix text', fg: '--fui-icon-muted', bg: '--fui-surface-raised', min: 4.5 },
   { what: 'Input clear affordance', fg: '--fui-action-clear', bg: '--fui-surface-raised', min: 3 },
   // Dialog
   { what: 'Dialog title ink', fg: '--fui-text-heading', bg: '--fui-surface-raised', min: 4.5 },
@@ -280,6 +286,7 @@ const BASE_DEVIATIONS: Record<string, Record<string, number>> = {
     'Button danger outline label': 3.46,
     'Input placeholder ink': 1.63,
     'Input border': 1.3,
+    'Input affix text': 3.27,
     'Input error message': 3.46,
     'Input clear affordance': 1.63,
     'Focus ring on page': 2.11,
@@ -296,6 +303,34 @@ const BASE_DEVIATIONS: Record<string, Record<string, number>> = {
     'Button danger outline label': 4.1,
     'Input placeholder ink': 2.64,
     'Input border': 1.24,
+    'Input affix text': 4.11,
+  },
+}
+
+/**
+ * Deviations the OVERLAY does not fix either.
+ *
+ * `a11y.css` re-points semantic tokens; it does not change which token a
+ * component reaches for. `--fui-icon-muted` is an icon colour solved for the
+ * 3:1 of WCAG 1.4.11, and Input renders its `prefix`/`suffix` affixes in it —
+ * as text, which 1.4.3 holds to 4.5:1. The overlay leaves it where it is, so
+ * the pair fails AA on both palettes.
+ *
+ * Recorded rather than fixed, deliberately: feature 004 observes and does not
+ * change token values or component behaviour (spec Out of Scope). The fix is
+ * its own change — either a text-grade adornment token, or the affixes moving
+ * to `--fui-text-control`.
+ *
+ * Two-sided, exactly like BASE_DEVIATIONS: the ratio may not worsen, and if a
+ * later change fixes it the `toBeLessThan` fails so the entry is deleted
+ * instead of quietly outliving the problem it documents (FR-012).
+ */
+const AA_DEVIATIONS: Record<string, Record<string, number>> = {
+  light: {
+    'Input affix text': 3.27,
+  },
+  dark: {
+    'Input affix text': 4.11,
   },
 }
 
@@ -324,7 +359,22 @@ describe.each(['light', 'dark'] as const)('contrast — %s mode, base (Figma-fai
 })
 
 describe.each(['light', 'dark'] as const)('contrast — %s mode, with a11y.css (must reach AA)', (mode) => {
-  it.each(PAIRS)('$what', ({ fg, bg, min }) => {
-    expect(ratio(mode, true, fg, bg)).toBeGreaterThanOrEqual(min)
+  it.each(PAIRS)('$what', ({ what, fg, bg, min }) => {
+    const r = ratio(mode, true, fg, bg)
+    const known = AA_DEVIATIONS[mode][what]
+    if (known === undefined) {
+      expect(r).toBeGreaterThanOrEqual(min)
+    } else {
+      expect(r).toBeGreaterThanOrEqual(known)
+      expect(r).toBeLessThan(min)
+    }
+  })
+
+  it('records no overlay deviation for a pair the overlay already fixes', () => {
+    const stale = Object.keys(AA_DEVIATIONS[mode]).filter((what) => {
+      const pair = PAIRS.find((p) => p.what === what)
+      return !pair || ratio(mode, true, pair.fg, pair.bg) >= pair.min
+    })
+    expect(stale).toEqual([])
   })
 })

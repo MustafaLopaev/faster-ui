@@ -32,3 +32,15 @@ cypress/downloads
 *.njsproj
 *.sln
 *.sw?
+
+# Quality automation (004): fixture installs and per-run captures are never committed.
+# `visual/baselines/` IS committed — it is the reviewable evidence (FR-029).
+test/consumers/*/node_modules
+test/consumers/*/.next
+test/consumers/*/dist
+visual/current/
+visual/diff/
+visual/report.json
+
+# api-extractor scratch (the committed record lives in etc/)
+temp/
