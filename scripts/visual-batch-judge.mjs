@@ -45,6 +45,21 @@ if (!existsSync(reportPath)) {
 const report = JSON.parse(readFileSync(reportPath, 'utf8'))
 const cells = report.toJudge ?? []
 
+if (report.coldStart) {
+  // Same reasoning as visual.yml's `cold-start` guard: with no baseline set
+  // every cell is `new`, and judging the whole matrix against nothing to
+  // compare it to costs real money and characterises no change.
+  console.log(
+    'No baseline set — skipping judgment.\n' +
+      'Establish baselines first: gh workflow run visual.yml -f accept-baselines=true',
+  )
+  writeFileSync(
+    r('visual/judgment.json'),
+    JSON.stringify({ coldStart: true, verdicts: [] }, null, 2) + '\n',
+  )
+  process.exit(0)
+}
+
 if (cells.length === 0) {
   console.log('✔ No changed or new cells — nothing to judge. (This is the common case.)')
   writeFileSync(r('visual/judgment.json'), JSON.stringify({ verdicts: [] }, null, 2) + '\n')
