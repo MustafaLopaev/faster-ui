@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Button } from '../Button'
 import { Dialog } from './Dialog'
-import type { DialogProps } from './Dialog'
+import type { DialogProps } from './Dialog.types'
 
 // Resolved token values (src/tokens/tokens.css ← figma-extraction.md §3)
 const WHITE = 'rgb(255, 255, 255)'

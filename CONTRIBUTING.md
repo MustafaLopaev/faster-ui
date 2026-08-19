@@ -69,12 +69,19 @@ A component does not exist until it ships with its full contract, co-located:
 
 ```text
 src/components/<Name>/
-  <Name>.tsx          implementation
+  <Name>.types.ts     types, prop unions, prop defaults
+  <Name>.styles.ts    the class maps — configuration, not behaviour
+  <Name>.tsx          behaviour only; imports both of the above
   <Name>.test.tsx     Jest + React Testing Library
   <Name>.cy.tsx       Cypress component tests
+  <Name>.a11y.cy.tsx  the axe sweep for this component
   <Name>.stories.tsx  every variant and state, plus a Playground
   index.ts            barrel
 ```
+
+Shared pieces live outside the component folders: SVGs in `src/assets/icons`
+(prop-less, `aria-hidden`, `fui:size-full`), internal sub-components in
+`src/components/internal`. A component file should contain neither.
 
 House rules that reviewers will check:
 
@@ -85,8 +92,13 @@ House rules that reviewers will check:
 - **Tests assert user-observable behaviour** — roles, accessible names,
   keyboard flows — never class names as behaviour proofs.
 - **Props extend the native element** via `ComponentPropsWithoutRef<'…'>`,
-  refs are forwarded, `variant`/`size` are typed unions with defaults, and
-  `className` is a merge-safe escape hatch appended last.
+  refs are forwarded, and `className` is a merge-safe escape hatch appended last.
+- **Prop unions are const objects, not `enum`.** Every tsconfig sets
+  `erasableSyntaxOnly: true`, so a TS `enum` will not compile (TS1294) — and an
+  enum-typed prop would force consumers to import a symbol to write
+  `variant="primary"`. Declare `export const X = {…} as const` plus
+  `export type X = (typeof X)[keyof typeof X]`; the merged identifier works in
+  both value and type position. Defaults come from a `<NAME>_DEFAULTS` const.
 - **JSDoc every public prop.** It is what consumers see in IntelliSense and
   what Storybook's autodocs renders.
 - **Anything exported must come through `src/index.ts`.** `src/lib/` is private.

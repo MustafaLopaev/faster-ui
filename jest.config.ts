@@ -61,11 +61,19 @@ const config: Config = {
   // Shipping code only: barrels re-export, stories and specs are the harness,
   // and main.tsx is the dev playground — none belong in the denominator.
   // The SSR specs match `*.test.ts?(x)` and are excluded by the same rules.
+  //
+  // `*.styles.ts` is excluded for the same reason as barrels: it declares class
+  // strings and has no behaviour to exercise. Left in, istanbul reports partial
+  // coverage on multi-line string literals, which invites a pointless test to
+  // "fix" a number that never meant anything. `*.types.ts` stays IN — it holds
+  // the exported const objects (`ButtonVariant`, prop defaults) that are real
+  // runtime values on the public API.
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.test.{ts,tsx}',
     '!src/**/*.cy.tsx',
     '!src/**/*.stories.tsx',
+    '!src/**/*.styles.ts',
     '!src/**/index.ts',
     '!src/main.tsx',
   ],

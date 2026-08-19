@@ -1,8 +1,13 @@
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 
-/** Layout shared by every adornment box: centred, non-shrinking, inline. */
-const SLOT_BASE = 'fui:inline-flex fui:shrink-0 fui:items-center fui:justify-center'
+/**
+ * Layout shared by every adornment box: centred, non-shrinking, inline.
+ * Exported because the Input clear button and the Dialog close button need the
+ * same box on a `<button>`, which cannot be an `IconSlot` (that one is always
+ * `aria-hidden`, and those two are labelled controls).
+ */
+export const SLOT_BASE = 'fui:inline-flex fui:shrink-0 fui:items-center fui:justify-center'
 
 export interface IconSlotProps {
   /** The size ramp box (and, for Input, the adornment colour) for this slot. */
