@@ -1,50 +1,25 @@
 import { forwardRef, useEffect, useId, useRef } from 'react'
-import type { ComponentPropsWithoutRef, ReactNode, SyntheticEvent } from 'react'
+import type { SyntheticEvent } from 'react'
 import { cn } from '../../lib/cn'
-
-export type DialogSize = 'sm' | 'md' | 'lg'
-
-// Native `open` and `onClose` are intercepted by the controlled API and never
-// spread onto the element — a spread `open` attribute would render the dialog
-// non-modal (R-2). The global `title` tooltip attribute (a string) is
-// superseded by the title-row slot below.
-export interface DialogProps
-  extends Omit<ComponentPropsWithoutRef<'dialog'>, 'open' | 'onClose' | 'title'> {
-  /** Controlled visibility — the component never mutates it (FR-013). */
-  open: boolean
-  /** Called on every close intent (Escape, header close button); the owner flips `open`. */
-  onClose: () => void
-  /** Title row content; becomes the accessible name via aria-labelledby. */
-  title?: ReactNode
-  /** Right-aligned action slot (Figma composes md Buttons, 8px gap). */
-  footer?: ReactNode
-  /** Panel width: sm 400 / md 600 / lg 900, viewport-capped. */
-  size?: DialogSize
-  /** Hairline dividers under header / above footer (Figma "With divider"). */
-  dividers?: boolean
-  /** Header close button — present in every Figma Dialog set. */
-  showClose?: boolean
-}
-
-const SIZE_WIDTH: Record<DialogSize, string> = {
-  sm: 'fui:w-100',
-  md: 'fui:w-150',
-  lg: 'fui:w-225',
-}
-
-// `open:flex` keys the layout to [open] so the closed dialog keeps the UA's
-// display:none; the ::backdrop scrim is the overlay token, no extra DOM (R-8).
-const PANEL =
-  'fui:box-border fui:open:flex fui:flex-col fui:bg-surface-raised fui:text-text-control fui:font-sans fui:rounded-surface fui:shadow-elevation-4 fui:border-0 fui:backdrop:bg-overlay'
-
-const FOCUS_RING =
-  'fui:focus-visible:outline-2 fui:focus-visible:outline-solid fui:focus-visible:outline-offset-2 fui:focus-visible:outline-focus-ring'
-
-const closeGlyph = (
-  <svg viewBox="0 0 14 14" fill="none" aria-hidden="true" className="fui:size-full">
-    <path d="m3 3 8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-  </svg>
-)
+import { CloseIcon } from '../../assets/icons'
+import { SLOT_BASE } from '../internal'
+import {
+  DIALOG_BODY,
+  DIALOG_BODY_SPACING,
+  DIALOG_CLOSE_BUTTON,
+  DIALOG_DIVIDER,
+  DIALOG_FOCUS_RING,
+  DIALOG_FOOTER,
+  DIALOG_FOOTER_SPACING,
+  DIALOG_HEADER,
+  DIALOG_HEADER_SPACING,
+  DIALOG_PANEL,
+  DIALOG_PANEL_PADDING,
+  DIALOG_SIZE_WIDTH,
+  DIALOG_TITLE,
+} from './Dialog.styles'
+import { DIALOG_DEFAULTS } from './Dialog.types'
+import type { DialogProps } from './Dialog.types'
 
 export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog(props, ref) {
   const {
@@ -52,9 +27,9 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
     onClose,
     title,
     footer,
-    size = 'md',
-    dividers = false,
-    showClose = true,
+    size = DIALOG_DEFAULTS.size,
+    dividers = DIALOG_DEFAULTS.dividers,
+    showClose = DIALOG_DEFAULTS.showClose,
     className,
     children,
     ...rest
@@ -63,6 +38,9 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
   const innerRef = useRef<HTMLDialogElement | null>(null)
   const openerRef = useRef<HTMLElement | null>(null)
   const titleId = useId()
+
+  // Which spacing column of the style maps this render uses.
+  const spacing = dividers ? 'divided' : 'plain'
 
   const setRefs = (node: HTMLDialogElement | null) => {
     innerRef.current = node
@@ -114,17 +92,12 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
       onCancel={handleCancel}
       onClose={handleNativeClose}
       aria-labelledby={title != null ? titleId : undefined}
-      className={cn(PANEL, SIZE_WIDTH[size], dividers ? 'fui:p-0' : 'fui:p-6', className)}
+      className={cn(DIALOG_PANEL, DIALOG_SIZE_WIDTH[size], DIALOG_PANEL_PADDING[spacing], className)}
     >
       {(title != null || showClose) && (
-        <header
-          className={cn(
-            'fui:flex fui:shrink-0 fui:items-center fui:justify-between fui:gap-2',
-            dividers ? 'fui:px-6 fui:py-4' : 'fui:mb-4',
-          )}
-        >
+        <header className={cn(DIALOG_HEADER, DIALOG_HEADER_SPACING[spacing])}>
           {title != null ? (
-            <h2 id={titleId} className="fui:m-0 fui:text-title fui:font-medium fui:text-text-heading">
+            <h2 id={titleId} className={DIALOG_TITLE}>
               {title}
             </h2>
           ) : (
@@ -135,37 +108,20 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(function Dialog
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className={cn(
-                'fui:inline-flex fui:shrink-0 fui:items-center fui:justify-center fui:size-3.5 fui:p-0 fui:m-0 fui:bg-transparent fui:border-0 fui:cursor-pointer fui:text-icon-muted',
-                FOCUS_RING,
-              )}
+              className={cn(SLOT_BASE, DIALOG_CLOSE_BUTTON, DIALOG_FOCUS_RING)}
             >
-              {closeGlyph}
+              <CloseIcon />
             </button>
           )}
         </header>
       )}
-      {dividers && <div aria-hidden="true" data-divider className="fui:shrink-0 fui:border-0 fui:border-t fui:border-solid fui:border-border-strong" />}
-      <section
-        className={cn(
-          'fui:flex-1 fui:min-h-0 fui:overflow-y-auto fui:text-body fui:font-regular fui:text-text-control',
-          dividers && 'fui:px-6 fui:py-4',
-        )}
-      >
-        {children}
-      </section>
+      {dividers && <div aria-hidden="true" data-divider className={DIALOG_DIVIDER} />}
+      <section className={cn(DIALOG_BODY, DIALOG_BODY_SPACING[spacing])}>{children}</section>
       {footer != null && dividers && (
-        <div aria-hidden="true" data-divider className="fui:shrink-0 fui:border-0 fui:border-t fui:border-solid fui:border-border-strong" />
+        <div aria-hidden="true" data-divider className={DIALOG_DIVIDER} />
       )}
       {footer != null && (
-        <footer
-          className={cn(
-            'fui:flex fui:shrink-0 fui:items-center fui:justify-end fui:gap-2',
-            dividers ? 'fui:px-6 fui:py-4' : 'fui:mt-8',
-          )}
-        >
-          {footer}
-        </footer>
+        <footer className={cn(DIALOG_FOOTER, DIALOG_FOOTER_SPACING[spacing])}>{footer}</footer>
       )}
     </dialog>
   )

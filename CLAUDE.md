@@ -55,7 +55,12 @@ This repo uses **spec-driven development** via GitHub spec-kit:
     excluded so their utilities never reach the published stylesheet; the
     playground, Storybook and Cypress each have their own entry stylesheet
     (`src/dev.css`, `.storybook/preview.css`, `cypress/support/component.css`)
-    that widens the scope for themselves.
+    that widens the scope for themselves. The globs must name **both**
+    extensions and **both** folders (`components/**/*.{ts,tsx}` and
+    `assets/**/*.{ts,tsx}`) — the class maps live in `.styles.ts`. Getting this
+    wrong produces a green build with a third-size stylesheet and unstyled
+    components; `scripts/postbuild.mjs` fails the build if any class in shipping
+    source is absent from `dist/styles.css`.
   - **`src/tokens/a11y.css`** is an opt-in overlay published as
     `@mlopaev/faster-ui/a11y.css`. The TapTap palette does not reach WCAG AA
     (white on Primary/600 is 2.12:1); the base layer stays Figma-faithful and
@@ -138,10 +143,18 @@ src/tokens/            tokens.css      entry: layer order, imports, @source
                        tokens.test.ts  drift guard + contrast matrix
                        tokens.cy.tsx   real-browser proof of the theming contract
                        Tokens.stories.tsx  live catalogue read from the stylesheet
-src/components/<Name>/ <Name>.tsx + .test.tsx (Jest) + .cy.tsx (Cypress)
+src/components/<Name>/ <Name>.types.ts   types, prop unions, defaults
+                       <Name>.styles.ts  the class maps (Tailwind sees .ts too)
+                       <Name>.tsx        behaviour only — no types, no classes
+                       + .test.tsx (Jest) + .cy.tsx (Cypress) + .a11y.cy.tsx
                        + .stories.tsx + index.ts   (co-located contract)
                        Button/, Input/, Dialog/ (+ Dialog.journey.cy.tsx —
                        the US4 keyboard-only composition spec)
+src/components/internal/ private sub-components shared by the public ones
+                       (IconSlot + the SLOT_BASE class it exports)
+src/assets/icons/      prop-less SVG components: aria-hidden, currentColor,
+                       fui:size-full. Audited by lint:tokens like any shipped
+                       markup. Never exported from src/index.ts.
 src/lib/               shared internals: cn.ts (falsy-filtering class join)
 src/index.ts           the only public export surface
 src/main.tsx           dev playground (not part of the library build)
@@ -203,9 +216,19 @@ extension terminals), Cypress must run with it unset:
 
 - TypeScript strict; props extend the native element via
   `ComponentPropsWithoutRef<'...'>`; forward refs; set an explicit
-  `displayName`; `variant`/`size` as typed unions with defaults; `className`
-  merge-safe escape hatch. Every public prop carries JSDoc — it is what
-  IntelliSense and Storybook autodocs render.
+  `displayName`; `className` merge-safe escape hatch. Every public prop carries
+  JSDoc — it is what IntelliSense and Storybook autodocs render.
+- **Prop unions are const objects, never `enum`.** `erasableSyntaxOnly: true`
+  is set in all four tsconfigs, so a TS `enum` is a compile error (TS1294) —
+  and typing a prop as an enum would force consumers to import a symbol just to
+  write `variant="primary"`. Use the const-object-plus-derived-union pattern in
+  `<Name>.types.ts`; declaration merging makes one identifier serve as both the
+  value (`ButtonVariant.primary`) and the type. Member keys mirror their values.
+  Defaults come from a `<NAME>_DEFAULTS` const, not bare literals.
+- **Three files per component, by concern**: `.types.ts` (contract),
+  `.styles.ts` (class maps), `.tsx` (behaviour). No inline SVG and no helper
+  component inside a component file — SVGs go to `src/assets/icons`, shared
+  sub-components to `src/components/internal`.
 - Tests assert user-observable behavior (roles, accessible names, keyboard
   flows) — never class names as behavior proofs.
 - No hardcoded colors/spacing/radii in components — semantic tokens only.

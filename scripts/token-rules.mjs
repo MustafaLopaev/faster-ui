@@ -52,14 +52,18 @@ export const TOKEN_RULES = [
 /**
  * Which files these rules apply to.
  *
- * `src/tokens/` is EXEMPT by construction — it is not under `src/components/`,
- * and raw values are exactly what that layer is for. Tests, stories and Cypress
- * specs are exempt too: asserting a resolved colour is how the token layer is
+ * `src/tokens/` is EXEMPT by construction — it is not listed below, and raw
+ * values are exactly what that layer is for. Tests, stories and Cypress specs
+ * are exempt too: asserting a resolved colour is how the token layer is
  * verified, so a hex there is evidence, not a violation.
+ *
+ * `src/assets/` IS audited. Icon assets carry `fui:` classes like any other
+ * shipped markup, and moving them out of the component files must not move
+ * them out of Principle I's reach.
  */
 export function isAuditable(path) {
   return (
-    /(^|\/)src\/(components|lib)\/.+\.(tsx?|css)$/.test(path) &&
+    /(^|\/)src\/(components|lib|assets)\/.+\.(tsx?|css)$/.test(path) &&
     !/\.(test|cy|stories)\.tsx?$/.test(path)
   )
 }
