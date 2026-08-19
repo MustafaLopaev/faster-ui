@@ -5,6 +5,7 @@ import type { PreviewServer } from 'vite'
 
 const VISUAL_PORT = 8199
 const CURRENT_DIR = 'visual/current'
+const isConsumers = process.env.FUI_SUITE === 'consumers'
 
 export default defineConfig({
   component: {
@@ -34,16 +35,23 @@ export default defineConfig({
     },
   },
 
-  // Visual capture (004). Component testing keeps its own section untouched.
+  // Two e2e suites, selected by FUI_SUITE (same switch idiom as the component
+  // section above, and for the same reason — Cypress intersects `--spec` and
+  // `--config specPattern` with the testing type's own value):
+  //
+  //   (unset)     visual capture against the built Storybook workbench
+  //   consumers   the Next.js fixture's headless load, driven by
+  //               scripts/consumer-smoke.mjs, which owns that server's lifecycle
   e2e: {
     // `vite preview` binds the hostname — a request to the literal loopback
     // address returns nothing (verified: 000 vs 200). Do not "normalise" this
     // to 127.0.0.1.
-    baseUrl: `http://localhost:${VISUAL_PORT}`,
-    specPattern: 'visual/*.cy.ts',
+    baseUrl: isConsumers ? 'http://localhost:3100' : `http://localhost:${VISUAL_PORT}`,
+    specPattern: isConsumers ? 'test/consumers/*.cy.ts' : 'visual/*.cy.ts',
     supportFile: false,
     video: false,
     screenshotsFolder: CURRENT_DIR,
+    screenshotOnRunFailure: !isConsumers,
     trashAssetsBeforeRuns: true,
     setupNodeEvents(on) {
       let server: PreviewServer | undefined
@@ -54,6 +62,10 @@ export default defineConfig({
       // is added for this (research R-2). `configFile: false` keeps the
       // library build's lib/dts plugins out of a plain static serve.
       on('before:run', async () => {
+        // The consumer suite talks to a `next start` server that
+        // scripts/consumer-smoke.mjs starts and stops; only the visual suite
+        // needs the workbench served here.
+        if (isConsumers) return
         const { preview } = await import('vite')
         server = await preview({
           configFile: false,

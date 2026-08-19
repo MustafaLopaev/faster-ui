@@ -198,9 +198,18 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Read locked Cypress version
+        id: cypress-version
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/cypress'].version")" >> "$GITHUB_OUTPUT"
+      # The Next.js fixture's headless load runs through Cypress (no second
+      # browser stack — research R-1), so this job needs the binary like the
+      # `cypress` and `a11y` jobs do.
+      - name: Restore Cypress binary cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
       - run: npm ci
-        env:
-          CYPRESS_INSTALL_BINARY: '0'
       - run: npm run build
       # Packs once and installs the TARBALL into each fixture — never a
       # workspace link, which resolves through symlinks and is the classic way
