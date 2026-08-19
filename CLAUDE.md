@@ -76,6 +76,40 @@ This repo uses **spec-driven development** via GitHub spec-kit:
 - **`radius-surface` is 4px** (002 correction: the Dialog panel's
   node-verified corner radius; the foundation's 8px reading came from a demo
   artboard, and the `--fui-radius-8` primitive was deleted with it).
+- **Quality automation (004) — settled, don't re-litigate:**
+  - **axe's `color-contrast` is OFF on the `figma` palette and ON for `aa`.**
+    The default palette fails AA by design (27 pinned deviations), so enabling
+    it there fails nearly every component permanently — verified: enabling it
+    floods with 162 violations from Button alone. Contrast on that palette is
+    owned by `tokens.test.ts`, and owned *more* strictly (its matrix is
+    two-sided). Every other axe rule runs on both palettes.
+  - **a11y specs must keep their content inside the 1280×1024 viewport.** axe
+    resolves a background with `elementsFromPoint`; for an off-screen node that
+    fails and it assumes the page is white, producing dark-mode "contrast
+    violations" that are pure noise. Every matrix wraps (`fui:flex-wrap`).
+  - **The visual matrix is a LAYERED SET (239 cells), never a cross-product**
+    (4,416 cells ≈ 145 MB). Base grid + four one-axis sweeps + the adversarial
+    layer. The token-catalogue story is **excluded** — 1.4 MB per capture, a 42×
+    outlier that alone would be ~40% of the set.
+  - **Visual baselines are `ubuntu-latest`-only.** `visual-accept.mjs` refuses
+    to run off Linux without `--force`; generate them with
+    `gh workflow run visual.yml -f accept-baselines=true`, which runs the
+    ten-cycle stability check first.
+  - **`vite preview` binds `localhost`, not `127.0.0.1`** (verified: 000 vs
+    200), and it is started by `scripts/visual-capture.mjs`, not by
+    `cypress.config.ts` — Cypress verifies `baseUrl` *before* its `before:run`
+    hook, so a server started in the config is always too late.
+  - **Cypress intersects `--spec` and `--config specPattern` with the testing
+    type's own `specPattern`** — an excluded spec cannot be selected back in.
+    The disjoint suites are switched with `FUI_SUITE` (`a11y`, `consumers`).
+  - **No model-driven check may ever be a required check** (FR-017), and no
+    workflow may use `pull_request_target` (FR-018). `npm run lint:workflows`
+    enforces both, plus "no job holds the credential and `contents: write`".
+  - **The local hooks enforce nothing new.** `.claude/hooks/token-guard.mjs`
+    imports `scripts/token-rules.mjs`, the same module the blocking
+    `npm run lint:tokens` gate uses — one definition, so they cannot drift.
+  - Open findings the gates produced, recorded and deliberately unfixed:
+    `specs/004-quality-automation/findings.md`.
 - **`src/tokens/tokens.test.ts` is the token layer's contract test**: bridge ↔
   semantics bijection, no dangling `var()`, no dark/a11y override of a
   nonexistent token, no bridge-key/token-name collision, no raw colour literal
@@ -113,6 +147,20 @@ src/index.ts           the only public export surface
 src/main.tsx           dev playground (not part of the library build)
 src/dev.css            playground stylesheet (widens @source; not shipped)
 scripts/postbuild.mjs  copies a11y.css into dist + enforces the size budget
+        api-report.mjs        api-extractor wrapper: report / check
+        coverage-gate.mjs     props ↔ JSDoc ↔ Playground ↔ variant stories
+        token-audit.mjs       Principle I's mechanical half (blocking)
+        token-rules.mjs       the rules token-audit.mjs AND the local hook share
+        check-workflows.mjs   the workflow files' own safety invariants
+        consumer-smoke.mjs    pack → install → build → assert console clean
+        visual-{capture,compare,accept}.mjs   the three visual passes
+        visual-batch-judge.mjs, weekly-audit.mjs   Batch API, scheduled only
+visual/                matrix.ts (239 cells), capture.cy.ts, rubric.md,
+                       fixtures/ (frozen adversarial content + its stories),
+                       baselines/ (committed PNGs — ubuntu-latest ONLY)
+test/consumers/        vite-app, next-app, ts-resolution — NOT workspaces;
+                       installed from the packed tarball at check time
+etc/faster-ui.api.md   the committed public surface record
 ```
 
 TypeScript is split into four referenced projects (Jest and Cypress globals
@@ -132,6 +180,19 @@ npm run test:coverage    # Jest with thresholds enforced (jest.config.ts)
 npm run cy:ct            # Cypress component tests headless (cy:open interactive)
 npm run storybook        # Storybook dev at :6006 (light/dark toolbar)
 npm run build-storybook  # static workbench build
+
+# Quality automation (004). Each is the identical command CI runs.
+npm run lint:tokens      # Principle I, mechanical half — blocking
+npm run lint:workflows   # workflow-file safety invariants
+npm run test:ssr         # server render → hydrate + browserless import (needs dist/)
+npm run test:a11y        # axe per variant × mode × palette
+npm run test:consumers   # pack → three fixtures → publint + attw (needs dist/)
+npm run api:report       # regenerate etc/faster-ui.api.md
+npm run api:check        # fail if the committed record drifted (needs dist/)
+npm run coverage:gate    # props ↔ JSDoc ↔ Playground ↔ variant stories
+npm run visual:capture   # 239 cells → visual/current/ (needs storybook-static/)
+npm run visual:compare   # diff against baselines → visual/report.json
+npm run visual:accept    # adopt captures as baselines (Linux only)
 ```
 
 Quirk: in shells where `ELECTRON_RUN_AS_NODE=1` is exported (e.g. VS Code

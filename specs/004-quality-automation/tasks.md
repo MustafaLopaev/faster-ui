@@ -165,25 +165,25 @@ description: "Task list for the Quality Automation Layer"
 
 **Independent Test**: Quickstart Scenario 7 — a label clipping at 200% scaling is reported as a clipping defect in exactly the scaling-sweep cells.
 
-- [ ] T063 [US4] Create `visual/matrix.ts` defining the **layered set** from [visual-matrix.md](./contracts/visual-matrix.md): base grid 138 + palette 46 + scaling 23 + direction 23 + motion 3 = **233 cells**. Each sweep varies **one** axis off the base grid — the cross-product is 4,416 cells ≈ 145 MB and is disqualifying (research R-4).
-- [ ] T064 [US4] Exclude `foundations-design-tokens--all-tokens` in `visual/matrix.ts` with a comment stating why: a documentation page at **1.4 MB per capture**, a 42× outlier that alone would be ~40% of the set *(verified)*. Record it so nobody "restores" it.
-- [ ] T065 [P] [US4] Create `visual/fixtures/adversarial.ts` with the six frozen cases from [data-model.md](./data-model.md#10-adversarial-content-set): 200-character label, Arabic string, emoji with combining marks, zero-width-joiner sequence, 500-row modal body, empty/single-character boundary. **Generate once, then freeze** — regenerating per run makes the matrix irreproducible (FR-028).
-- [ ] T066 [US4] Create `visual/capture.cy.ts` reading `storybook-static/index.json` and walking `visual/matrix.ts`, serving via `vite preview --outDir storybook-static --strictPort` on **`localhost`** *(verified: the literal loopback address fails)*.
-- [ ] T067 [US4] Implement the four anti-flake measures in `visual/capture.cy.ts` (research R-3): inject a stylesheet zeroing `animation-duration`/`transition-duration` (the Button spinner is otherwise a guaranteed per-run diff), await `document.fonts.ready`, suppress the caret, and pin capture to `ubuntu-latest`.
-- [ ] T068 [US4] Implement theme, palette, scaling, direction and reduced-motion switching in `visual/capture.cy.ts` — the first two mirroring `.storybook/preview.tsx`, reduced motion via CDP `Emulation.setEmulatedMedia` through `Cypress.automation('remote:debugger:protocol', …)`, the same channel `cypress-real-events` already uses.
-- [ ] T069 [US4] Implement the filename scheme from [data-model.md](./data-model.md#6-visual-cell) — `{storyId}__{theme}-{palette}-{viewport}-{scale}-{direction}-{motion}-{content}.png`. Identity **is** the filename; no sidecar index to desynchronise.
-- [ ] T070 [US4] Create `scripts/visual-compare.mjs` using `pixelmatch` over `pngjs`: per-pixel threshold `0.1`, cell fails above `0.1%` differing pixels. Emit a changed-cell manifest with states `unchanged | changed | new | orphaned`.
-- [ ] T071 [US4] Make `orphaned` baselines (whose story no longer exists) **reported, never silently kept**, in `scripts/visual-compare.mjs`.
-- [ ] T072 [US4] Create `scripts/visual-accept.mjs` for `npm run visual:accept`, and surface the accepted-cell **count** in its output so a 200-cell acceptance cannot be mistaken for a 2-cell one (FR-029).
-- [ ] T073 [US4] Add the `visual-capture` and `visual-compare` jobs to `.github/workflows/visual.yml` with the `visual` path filter. **Neither needs a credential** — both run for forks.
+- [X] T063 [US4] Create `visual/matrix.ts` defining the **layered set** from [visual-matrix.md](./contracts/visual-matrix.md): base grid 138 + palette 46 + scaling 23 + direction 23 + motion 3 = **233 cells**. Each sweep varies **one** axis off the base grid — the cross-product is 4,416 cells ≈ 145 MB and is disqualifying (research R-4).
+- [X] T064 [US4] Exclude `foundations-design-tokens--all-tokens` in `visual/matrix.ts` with a comment stating why: a documentation page at **1.4 MB per capture**, a 42× outlier that alone would be ~40% of the set *(verified)*. Record it so nobody "restores" it.
+- [X] T065 [P] [US4] Create `visual/fixtures/adversarial.ts` with the six frozen cases from [data-model.md](./data-model.md#10-adversarial-content-set): 200-character label, Arabic string, emoji with combining marks, zero-width-joiner sequence, 500-row modal body, empty/single-character boundary. **Generate once, then freeze** — regenerating per run makes the matrix irreproducible (FR-028).
+- [X] T066 [US4] Create `visual/capture.cy.ts` reading `storybook-static/index.json` and walking `visual/matrix.ts`, serving via `vite preview --outDir storybook-static --strictPort` on **`localhost`** *(verified: the literal loopback address fails)*.
+- [X] T067 [US4] Implement the four anti-flake measures in `visual/capture.cy.ts` (research R-3): inject a stylesheet zeroing `animation-duration`/`transition-duration` (the Button spinner is otherwise a guaranteed per-run diff), await `document.fonts.ready`, suppress the caret, and pin capture to `ubuntu-latest`.
+- [X] T068 [US4] Implement theme, palette, scaling, direction and reduced-motion switching in `visual/capture.cy.ts` — the first two mirroring `.storybook/preview.tsx`, reduced motion via CDP `Emulation.setEmulatedMedia` through `Cypress.automation('remote:debugger:protocol', …)`, the same channel `cypress-real-events` already uses.
+- [X] T069 [US4] Implement the filename scheme from [data-model.md](./data-model.md#6-visual-cell) — `{storyId}__{theme}-{palette}-{viewport}-{scale}-{direction}-{motion}-{content}.png`. Identity **is** the filename; no sidecar index to desynchronise.
+- [X] T070 [US4] Create `scripts/visual-compare.mjs` using `pixelmatch` over `pngjs`: per-pixel threshold `0.1`, cell fails above `0.1%` differing pixels. Emit a changed-cell manifest with states `unchanged | changed | new | orphaned`.
+- [X] T071 [US4] Make `orphaned` baselines (whose story no longer exists) **reported, never silently kept**, in `scripts/visual-compare.mjs`.
+- [X] T072 [US4] Create `scripts/visual-accept.mjs` for `npm run visual:accept`, and surface the accepted-cell **count** in its output so a 200-cell acceptance cannot be mistaken for a 2-cell one (FR-029).
+- [X] T073 [US4] Add the `visual-capture` and `visual-compare` jobs to `.github/workflows/visual.yml` with the `visual` path filter. **Neither needs a credential** — both run for forks.
 - [ ] T074 [US4] Capture the first baseline set and run the **ten-run stability check** (SC-006) before committing anything. Zero changed cells, ten times out of ten. Any drift means the anti-flake protocol is incomplete — **do not proceed until clean**; an unstable baseline makes every later result meaningless.
 - [ ] T075 [US4] Commit `visual/baselines/` and verify the set is under the **12 MB** budget (SC-011). Projection is ~7.7 MB. If it does not fit, narrow the matrix — the budget does not silently rise, mirroring how `scripts/postbuild.mjs` treats the dist budget.
-- [ ] T076 [P] [US4] Create `visual/rubric.md` — the jury's cached prefix: the token contract, the extraction records, and what counts as a defect versus an intended change.
-- [ ] T077 [US4] Add the `visual-judge` job to `.github/workflows/visual.yml`, running **only** on `changed` and `new` cells (FR-026), with `--json-schema` producing `{cell, verdict, defect, confidence}`.
-- [ ] T078 [US4] Enforce in the schema that `defect` is required and non-empty when the verdict is not `PASS`, and that it names the defect — *"label clipped at the right edge at 200% scaling"*, never *"differs from baseline"* (FR-027).
+- [X] T076 [P] [US4] Create `visual/rubric.md` — the jury's cached prefix: the token contract, the extraction records, and what counts as a defect versus an intended change.
+- [X] T077 [US4] Add the `visual-judge` job to `.github/workflows/visual.yml`, running **only** on `changed` and `new` cells (FR-026), with `--json-schema` producing `{cell, verdict, defect, confidence}`.
+- [X] T078 [US4] Enforce in the schema that `defect` is required and non-empty when the verdict is not `PASS`, and that it names the defect — *"label clipped at the right edge at 200% scaling"*, never *"differs from baseline"* (FR-027).
 - [ ] T079 [US4] Run quickstart Scenario 7: narrow a Button's `min-width` so its label clips at 200%; confirm only the scaling-sweep cells at 360 report `changed`, the jury returns `FAIL` naming clipping, and base-grid cells at 100% stay `unchanged`.
 - [ ] T080 [US4] Verify the credential-absent path (US4 scenario 7, FR-030): unset the secret and confirm **comparison still runs and still reports differences** — only judgment is skipped.
-- [ ] T081 [US4] Add the nightly full-sweep job to `.github/workflows/visual.yml` on `schedule`, using the Anthropic SDK **Batch API** (FR-038) — the action does not expose it, and this is the sole justification for the `@anthropic-ai/sdk` devDependency.
+- [X] T081 [US4] Add the nightly full-sweep job to `.github/workflows/visual.yml` on `schedule`, using the Anthropic SDK **Batch API** (FR-038) — the action does not expose it, and this is the sole justification for the `@anthropic-ai/sdk` devDependency.
 - [ ] T082 [US4] Confirm the combined model spend across `review.yml` and `visual.yml` holds the **≈$20/month** target (SC-009) at current change volume, from the logged usage rather than a billing statement.
 
 **Checkpoint**: The fourth documented gap is closed. Comparison blocks; judgment is advisory.
@@ -196,16 +196,16 @@ description: "Task list for the Quality Automation Layer"
 
 **Independent Test**: Quickstart Scenario 8, plus changing a design-source value and confirming the next comparison reports it while recorded deviations stay silent.
 
-- [ ] T083 [P] [US5] Create `.claude/skills/design-drift/SKILL.md` (C1) — **local only**; the Figma connector is authenticated on the developer machine and a runner has no path to it (research R-12).
-- [ ] T084 [US5] Implement suppression in `.claude/skills/design-drift/SKILL.md`: read `specs/001-foundation-tooling/figma-extraction.md` and `specs/002-core-components/figma-extraction.md` **first**, and never report a recorded deviation as drift — `radius-surface` at 4px and the AA overlay values are deliberate (FR-031).
-- [ ] T085 [US5] Implement the `unreachable` outcome in the drift skill (FR-032): when the connector is unavailable the report **says so**. An all-clear it did not establish is worse than no report.
-- [ ] T086 [P] [US5] Create `.github/workflows/triage.yml` (C2) on `workflow_run` for `CI` with `conclusion: failure`, `permissions: { contents: read, actions: read, pull-requests: write }`.
-- [ ] T087 [US5] Encode the four documented flake shapes in the triage prompt per [scheduled-agents.md](./contracts/scheduled-agents.md): CDP mouse persistence (park on `[data-cy="park"]`), `ELECTRON_RUN_AS_NODE` (local-only; seeing it in CI means something else), cold Cypress binary cache, and consumer-framework major releases. A `known-flake` verdict **must name the pattern it matched** (FR-033).
-- [ ] T088 [P] [US5] Create `.github/workflows/changelog.yml` (C3) on `push` to `main`, opening a **pull request** with the `## [Unreleased]` bullet. `contents: write` scoped to a new branch only; **never** writes to `main` (FR-034).
-- [ ] T089 [US5] Encode the repository's own rule in the changelog prompt — "anything a consumer would notice" — and require **no pull request at all** when nothing qualifies. A drafter that always proposes something becomes noise within a week.
-- [ ] T090 [P] [US5] Create `.github/workflows/audit.yml` (C5) on a weekly `schedule` plus `workflow_dispatch`, running `.claude/skills/production-audit/SKILL.md` against `main` via the Batch API.
-- [ ] T091 [US5] Implement week-over-week diffing in `audit.yml` (FR-035) — **the diff is the product, not the findings**. Track approach toward the limits in [scheduled-agents.md](./contracts/scheduled-agents.md#c5--scheduled-deep-audit-githubworkflowsaudityml): dist sizes, coverage thresholds, baseline weight, dependency staleness.
-- [ ] T092 [US5] Apply the credential guard (T013) to all three workflow-based agents so each skips green without the secret.
+- [X] T083 [P] [US5] Create `.claude/skills/design-drift/SKILL.md` (C1) — **local only**; the Figma connector is authenticated on the developer machine and a runner has no path to it (research R-12).
+- [X] T084 [US5] Implement suppression in `.claude/skills/design-drift/SKILL.md`: read `specs/001-foundation-tooling/figma-extraction.md` and `specs/002-core-components/figma-extraction.md` **first**, and never report a recorded deviation as drift — `radius-surface` at 4px and the AA overlay values are deliberate (FR-031).
+- [X] T085 [US5] Implement the `unreachable` outcome in the drift skill (FR-032): when the connector is unavailable the report **says so**. An all-clear it did not establish is worse than no report.
+- [X] T086 [P] [US5] Create `.github/workflows/triage.yml` (C2) on `workflow_run` for `CI` with `conclusion: failure`, `permissions: { contents: read, actions: read, pull-requests: write }`.
+- [X] T087 [US5] Encode the four documented flake shapes in the triage prompt per [scheduled-agents.md](./contracts/scheduled-agents.md): CDP mouse persistence (park on `[data-cy="park"]`), `ELECTRON_RUN_AS_NODE` (local-only; seeing it in CI means something else), cold Cypress binary cache, and consumer-framework major releases. A `known-flake` verdict **must name the pattern it matched** (FR-033).
+- [X] T088 [P] [US5] Create `.github/workflows/changelog.yml` (C3) on `push` to `main`, opening a **pull request** with the `## [Unreleased]` bullet. `contents: write` scoped to a new branch only; **never** writes to `main` (FR-034).
+- [X] T089 [US5] Encode the repository's own rule in the changelog prompt — "anything a consumer would notice" — and require **no pull request at all** when nothing qualifies. A drafter that always proposes something becomes noise within a week.
+- [X] T090 [P] [US5] Create `.github/workflows/audit.yml` (C5) on a weekly `schedule` plus `workflow_dispatch`, running `.claude/skills/production-audit/SKILL.md` against `main` via the Batch API.
+- [X] T091 [US5] Implement week-over-week diffing in `audit.yml` (FR-035) — **the diff is the product, not the findings**. Track approach toward the limits in [scheduled-agents.md](./contracts/scheduled-agents.md#c5--scheduled-deep-audit-githubworkflowsaudityml): dist sizes, coverage thresholds, baseline weight, dependency staleness.
+- [X] T092 [US5] Apply the credential guard (T013) to all three workflow-based agents so each skips green without the secret.
 - [ ] T093 [US5] Run quickstart Scenario 8 both halves: an unparked-mouse Cypress failure → `known-flake` naming the CDP pattern; a genuinely broken assertion → `regression`.
 
 **Checkpoint**: Recurring manual checks are automated. Nothing blocks anything.
@@ -218,11 +218,11 @@ description: "Task list for the Quality Automation Layer"
 
 **Independent Test**: Quickstart Scenario 9 — the edit is refused locally, **and** the gate still fails with hooks disabled.
 
-- [ ] T094 [US6] Create `.claude/settings.json` with a `PostToolUse` hook matching `Edit|Write` on `src/components/**` that runs the token-audit regex fast path and **refuses** the edit on a raw colour, arbitrary-value utility, or non-semantic palette class.
-- [ ] T095 [US6] Add a `Stop` hook to `.claude/settings.json` running `lint` and `typecheck` on changed files only.
-- [ ] T096 [US6] Scope-guard the `PostToolUse` matcher so an edit outside `src/components/**` runs no component-specific check (US6 scenario 4). A hook that fires on every file is a hook that gets disabled.
-- [ ] T097 [US6] Document in `CONTRIBUTING.md` that the hooks are a convenience layer and enforce nothing new — every rule they apply is also enforced by a gate that cannot be bypassed (FR-036).
-- [ ] T098 [US6] Run quickstart Scenario 9 **including the half that matters** (SC-013): disable the hooks entirely, push the same violation, and confirm the `token-audit` and lint gates still fail. If they do not, the hook has become load-bearing and there is a hole in the pipeline — this scenario tests the gate, not the hook.
+- [X] T094 [US6] Create `.claude/settings.json` with a `PostToolUse` hook matching `Edit|Write` on `src/components/**` that runs the token-audit regex fast path and **refuses** the edit on a raw colour, arbitrary-value utility, or non-semantic palette class.
+- [X] T095 [US6] Add a `Stop` hook to `.claude/settings.json` running `lint` and `typecheck` on changed files only.
+- [X] T096 [US6] Scope-guard the `PostToolUse` matcher so an edit outside `src/components/**` runs no component-specific check (US6 scenario 4). A hook that fires on every file is a hook that gets disabled.
+- [X] T097 [US6] Document in `CONTRIBUTING.md` that the hooks are a convenience layer and enforce nothing new — every rule they apply is also enforced by a gate that cannot be bypassed (FR-036).
+- [X] T098 [US6] Run quickstart Scenario 9 **including the half that matters** (SC-013): disable the hooks entirely, push the same violation, and confirm the `token-audit` and lint gates still fail. If they do not, the hook has become load-bearing and there is a hole in the pipeline — this scenario tests the gate, not the hook.
 
 **Checkpoint**: All thirteen automations delivered.
 
@@ -233,12 +233,12 @@ description: "Task list for the Quality Automation Layer"
 - [ ] T099 [P] Run quickstart Scenario 10: a docs-only change executes **no** check from this feature and still receives a verdict (SC-004, FR-005).
 - [ ] T100 [P] Run quickstart Scenario 11 end to end and confirm SC-005 — a contributor with no credential gets a complete, non-red verdict from everything that does not need one.
 - [X] T101 Verify the invariant from [data-model.md](./data-model.md#1-check) by inspecting the check inventory: **no check is both `needsCredential` and `required`**. A check that cannot run for a fork must never be able to block one.
-- [ ] T102 [P] Verify every check has a working `localCommand` (FR-001) by running all nine npm scripts locally and confirming each matches its CI verdict.
-- [ ] T103 Confirm `release.yml` gates on the four new deterministic checks automatically via the `workflow_call` reuse, with no edit to `release.yml` itself (FR-003).
-- [ ] T104 [P] Re-run `npm pack --dry-run` and confirm no `test/`, `visual/`, `etc/` or fixture path leaked into the tarball (FR-004).
+- [X] T102 [P] Verify every check has a working `localCommand` (FR-001) by running all nine npm scripts locally and confirming each matches its CI verdict.
+- [X] T103 Confirm `release.yml` gates on the four new deterministic checks automatically via the `workflow_call` reuse, with no edit to `release.yml` itself (FR-003).
+- [X] T104 [P] Re-run `npm pack --dry-run` and confirm no `test/`, `visual/`, `etc/` or fixture path leaked into the tarball (FR-004).
 - [ ] T105 Measure the warm-cache full pipeline and confirm it stays within the 15-minute budget (SC-010). If it does not, parallelise rather than dropping a gate.
-- [ ] T106 [P] Update `README.md` with the new badge set and `CONTRIBUTING.md` with the nine new commands and the baseline-acceptance workflow.
-- [ ] T107 [P] Update `CLAUDE.md` with the settled decisions from this feature so they are not re-litigated: the palette-scoped `color-contrast` split, the layered visual matrix, the token-catalogue exclusion, `vite preview` on `localhost`, and baselines being `ubuntu-latest`-only.
+- [X] T106 [P] Update `README.md` with the new badge set and `CONTRIBUTING.md` with the nine new commands and the baseline-acceptance workflow.
+- [X] T107 [P] Update `CLAUDE.md` with the settled decisions from this feature so they are not re-litigated: the palette-scoped `color-contrast` split, the layered visual matrix, the token-catalogue exclusion, `vite preview` on `localhost`, and baselines being `ubuntu-latest`-only.
 - [ ] T108 Add a `## [Unreleased]` changelog entry **only if** anything here is consumer-visible. It is not — this feature adds no runtime dependency and changes no public API — so record explicitly that no entry is warranted, and let the `changelog` agent's silence be its first correct behaviour.
 - [ ] T109 Record the false-positive rates gathered for every model-driven check (SC-007) in a follow-up issue. **Promote nothing to blocking** — this feature's Out of Scope forbids it; that decision belongs to the successor feature this measurement exists to inform.
 

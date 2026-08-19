@@ -1,0 +1,325 @@
+# Visual matrix (004 US4, contract: contracts/visual-matrix.md).
+#
+# THE ORDER IS THE CONTRACT: capture → compare → judge only what moved.
+# Reversing the last two costs roughly 12× for information the comparison has
+# already settled, which is why FR-026 is written as an ordering.
+#
+# Capture and compare need NO credential and run for forks. Only judgment needs
+# one, and when it is absent the comparison still runs and still reports
+# differences (FR-030) — a visual check that goes blind without a secret would
+# be useless to exactly the contributors who most need it.
+#
+# PLATFORM: baselines are valid for `ubuntu-latest` ONLY. Font rasterisation
+# alone makes a capture from another platform differ on every cell. Every job
+# that touches pixels pins the runner, and `scripts/visual-accept.mjs` refuses
+# to run off Linux without --force.
+name: Visual
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    # Nightly full sweep through the Batch API (FR-038). 03:17 rather than a
+    # round hour: GitHub's scheduler queues heavily on the hour.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      accept-baselines:
+        description: 'Capture on this runner and open a PR adopting the result as baselines'
+        type: boolean
+        default: false
+      stability-runs:
+        description: 'Capture N times and report drift before accepting (SC-006 asks for 10)'
+        type: string
+        default: '10'
+
+concurrency:
+  group: visual-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      visual: ${{ steps.filter.outputs.visual }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/path-filter
+        id: filter
+        with:
+          base: ${{ github.event.pull_request.base.sha || github.event.before }}
+
+  # ── Pass 1 — capture ──────────────────────────────────────────────────────
+  visual-capture:
+    # Pinned, and not a preference: see the platform note at the top of the file.
+    runs-on: ubuntu-latest
+    needs: changes
+    if: github.event_name != 'schedule' && needs.changes.outputs.visual == 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Read locked Cypress version
+        id: cypress-version
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/cypress'].version")" >> "$GITHUB_OUTPUT"
+      - name: Restore Cypress binary cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
+      - run: npm ci
+      # The workbench is the subject; `vite preview` serves it, started by
+      # scripts/visual-capture.mjs (Cypress verifies baseUrl before its own
+      # before:run hook, so a server started in the config is always too late).
+      - run: npm run build-storybook
+      - run: npm run visual:capture
+      - uses: actions/upload-artifact@v4
+        with:
+          name: visual-current
+          path: visual/current/
+          retention-days: 7
+
+  # ── Pass 2 — compare (deterministic, no credential, runs for forks) ───────
+  visual-compare:
+    runs-on: ubuntu-latest
+    needs: [changes, visual-capture]
+    if: github.event_name != 'schedule' && needs.changes.outputs.visual == 'true'
+    outputs:
+      to-judge: ${{ steps.compare.outputs.count }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+      - uses: actions/download-artifact@v4
+        with:
+          name: visual-current
+          path: visual/current
+      - id: compare
+        run: |
+          set +e
+          npm run visual:compare | tee compare.log
+          status=${PIPESTATUS[0]}
+          count=$(node -p "require('./visual/report.json').toJudge.length")
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          exit $status
+      # Diffs and the manifest are the reviewable evidence — uploaded even when
+      # the step above failed, which is exactly when they are wanted.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-diff
+          path: |
+            visual/diff/
+            visual/report.json
+          retention-days: 7
+
+  # ── Pass 3 — judge only the cells that moved ──────────────────────────────
+  visual-judge:
+    runs-on: ubuntu-latest
+    needs: [changes, visual-compare]
+    # `always()` so judgment still runs when compare FAILED — a failing compare
+    # is precisely the case with cells worth judging.
+    if: >-
+      always() &&
+      github.event_name != 'schedule' &&
+      needs.changes.outputs.visual == 'true' &&
+      needs.visual-compare.outputs.to-judge != '0' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: visual-current
+          path: visual/current
+      - uses: actions/download-artifact@v4
+        with:
+          name: visual-diff
+          path: visual
+      - uses: ./.github/actions/claude-guard
+        id: guard
+        with:
+          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+      - if: steps.guard.outputs.ok == 'true'
+        id: judge
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          use_sticky_comment: true
+          claude_args: |
+            --model claude-opus-5
+            --allowedTools "Read,Glob,Bash(cat visual/report.json)"
+            --json-schema '{"type":"array","items":{"type":"object","required":["cell","verdict","defect","confidence"],"additionalProperties":false,"properties":{"cell":{"type":"string","minLength":1},"verdict":{"type":"string","enum":["PASS","WARN","FAIL"]},"defect":{"type":"string"},"confidence":{"type":"string","enum":["high","low"]}}}}'
+          prompt: |
+            Judge the rendered cells this change moved.
+
+            Read `visual/rubric.md` FIRST and in full — it defines the verdicts,
+            what counts as a defect, and the list of recorded deviations you must
+            never report. It is the authority here; this prompt only points at it.
+
+            `visual/report.json` names the cells to judge in `toJudge`. Judge
+            those and ONLY those — every other cell is already settled by the
+            pixel comparison, and re-judging them costs roughly 12× for nothing.
+
+            For each cell:
+              - `visual/baselines/<cell>` is what it looked like before
+              - `visual/current/<cell>`   is what it looks like now
+              - `visual/diff/<cell>`      highlights the differing pixels, when
+                the cell had a baseline at all
+            A `new` cell has no baseline; judge the current image on its own
+            merits and say what it shows.
+
+            The filename carries the cell's identity — story, theme, palette,
+            viewport, text scale, writing direction, motion, content — and half
+            the time it tells you what to look for before you open the image. A
+            cell ending `-360-200-ltr-default-story` is the tightest viewport at
+            200% text scaling: look for clipping.
+
+            `defect` is REQUIRED and non-empty whenever the verdict is not
+            `PASS`, and must name the defect — "the label is clipped at the right
+            edge, the last four characters cut off by the 360px viewport", never
+            "differs from baseline". The second says only what the comparison
+            already said.
+
+            Use `confidence: low` rather than guessing. A low-confidence cell
+            gets a human; a confidently wrong PASS gets shipped.
+
+            You cannot block this pull request. The blocking half is the pixel
+            comparison, which has already run.
+      - name: Log model usage
+        if: steps.guard.outputs.ok == 'true' && always()
+        env:
+          EXECUTION_FILE: ${{ steps.judge.outputs.execution_file }}
+        run: node .github/scripts/log-usage.mjs visual-judge "$EXECUTION_FILE"
+
+  # ── Nightly full sweep, through the Batch API ─────────────────────────────
+  # The whole matrix rather than the changed slice, on the lower-cost
+  # asynchronous path (FR-038). The action does not expose the Batch API, which
+  # is the sole justification for the @anthropic-ai/sdk devDependency.
+  nightly-sweep:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Read locked Cypress version
+        id: cypress-version
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/cypress'].version")" >> "$GITHUB_OUTPUT"
+      - name: Restore Cypress binary cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
+      - run: npm ci
+      - run: npm run build-storybook
+      - run: npm run visual:capture
+      - run: npm run visual:compare || true
+      - uses: ./.github/actions/claude-guard
+        id: guard
+        with:
+          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+      - if: steps.guard.outputs.ok == 'true'
+        run: node scripts/visual-batch-judge.mjs
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-visual
+          path: |
+            visual/diff/
+            visual/report.json
+            visual/judgment.json
+          retention-days: 14
+
+  # ── Baseline generation (operator task 3) ─────────────────────────────────
+  # Baselines MUST be produced here, on ubuntu-latest, never on a developer
+  # machine. Runs the stability check first: an unstable baseline set makes
+  # every later visual result meaningless, so it is refused rather than
+  # committed (SC-006).
+  accept-baselines:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.accept-baselines
+    permissions:
+      contents: write # a NEW BRANCH only — never a push to the default branch
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Read locked Cypress version
+        id: cypress-version
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/cypress'].version")" >> "$GITHUB_OUTPUT"
+      - name: Restore Cypress binary cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
+      - run: npm ci
+      - run: npm run build-storybook
+
+      - name: Capture, then prove the capture is reproducible
+        env:
+          RUNS: ${{ inputs.stability-runs }}
+        run: |
+          set -euo pipefail
+          npm run visual:capture
+          npm run visual:accept
+          drifted=0
+          for i in $(seq 1 "${RUNS:-10}"); do
+            npm run visual:capture
+            if npm run visual:compare; then
+              echo "::notice::stability run $i/${RUNS:-10} — clean"
+            else
+              echo "::error::stability run $i/${RUNS:-10} — cells drifted on an UNCHANGED commit."
+              drifted=1
+            fi
+          done
+          if [ "$drifted" = "1" ]; then
+            echo "::error::The anti-flake protocol is incomplete. An unstable baseline set makes every later visual result meaningless — refusing to open the pull request. Check animation zeroing, document.fonts.ready, the settled-layout poll and the parked pointer in visual/capture.cy.ts."
+            exit 1
+          fi
+
+      - name: Open a pull request adopting the baselines
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch="visual/baselines-${GITHUB_RUN_ID}"
+          git switch -c "$branch"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add visual/baselines
+          count=$(git diff --cached --numstat -- visual/baselines | wc -l | tr -d ' ')
+          if [ "$count" = "0" ]; then
+            echo "::notice::Baselines already match this runner's output — nothing to open."
+            exit 0
+          fi
+          git commit -m "test(visual): accept ${count} baseline cells captured on ubuntu-latest"
+          git push origin "$branch"
+          gh pr create --title "test(visual): accept ${count} baseline cells" --body "$(printf '%s\n' \
+            "Captured on \`ubuntu-latest\` — the only platform these baselines are valid for." \
+            "" \
+            "**${count} cells accepted.** The count is here rather than only in the diff so a" \
+            "200-cell acceptance cannot be mistaken for a 2-cell one (FR-029)." \
+            "" \
+            "Reproducibility was verified before this branch was opened: ${RUNS:-10} capture and" \
+            "compare cycles on the unchanged commit, zero drifted cells (SC-006).")"
