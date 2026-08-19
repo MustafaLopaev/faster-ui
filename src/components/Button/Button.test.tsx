@@ -2,7 +2,7 @@ import { createRef } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Button } from './Button'
-import type { ButtonProps } from './Button'
+import type { ButtonProps } from './Button.types'
 
 const icon = (
   <svg data-testid="probe-icon" viewBox="0 0 16 16">

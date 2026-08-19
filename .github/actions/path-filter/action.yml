@@ -1,0 +1,93 @@
+# Shared path-filter sets (004 FR-005) — the three sets documented in
+# .github/workflows/README.md, computed once and consumed by ci.yml, review.yml
+# and visual.yml so a docs-only change wakes nothing.
+#
+# Implemented in bash against `git diff` rather than a third-party filter action:
+# the sets are ~15 globs, the logic is auditable in one screen, and Principle VII
+# says a dependency needs a reason. Requires `fetch-depth: 0` on the checkout.
+#
+# FAIL-SAFE: when the diff base cannot be determined (a brand-new branch, a force
+# push, a shallow clone), every set reports `true`. Running a gate needlessly
+# costs runner minutes; skipping one wrongly costs a regression.
+name: Path filter
+description: Reports which of the shared path sets a change touches.
+
+inputs:
+  base:
+    description: The commit to diff against. Empty means "cannot determine" — every set reports true.
+    required: false
+    default: ''
+
+outputs:
+  code:
+    description: Library source, packaging or tooling changed.
+    value: ${{ steps.filter.outputs.code }}
+  components:
+    description: Component or shared-internal source changed.
+    value: ${{ steps.filter.outputs.components }}
+  visual:
+    description: Something that can move a rendered pixel changed.
+    value: ${{ steps.filter.outputs.visual }}
+  files:
+    description: Newline-separated list of changed files, for logging.
+    value: ${{ steps.filter.outputs.files }}
+
+runs:
+  using: composite
+  steps:
+    - id: filter
+      shell: bash
+      env:
+        BASE: ${{ inputs.base }}
+      run: |
+        set -uo pipefail
+
+        all_true() {
+          {
+            echo "code=true"
+            echo "components=true"
+            echo "visual=true"
+            echo "files="
+          } >> "$GITHUB_OUTPUT"
+        }
+
+        if [ -z "${BASE}" ] || [ "${BASE}" = "0000000000000000000000000000000000000000" ]; then
+          echo "::notice title=Path filter::No usable diff base — every gate runs (fail-safe)."
+          all_true
+          exit 0
+        fi
+
+        if ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+          git fetch --no-tags --depth=1 origin "${BASE}" 2>/dev/null || true
+        fi
+        if ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+          echo "::notice title=Path filter::Diff base ${BASE} is unreachable — every gate runs (fail-safe)."
+          all_true
+          exit 0
+        fi
+
+        changed="$(git diff --name-only "${BASE}" HEAD)"
+        echo "Changed files:"
+        echo "${changed}"
+
+        # The three sets, kept identical to .github/workflows/README.md.
+        matches() { echo "${changed}" | grep -qE "$1"; }
+
+        code='false'
+        components='false'
+        visual='false'
+
+        matches '^(src/|scripts/|test/consumers/|package(-lock)?\.json$|vite\.config\.ts$|tsconfig.*\.json$|jest\.config\.ts$|api-extractor\.json$)' && code='true'
+        matches '^src/(components|lib)/' && components='true'
+        matches '^(src/(components|tokens)/|visual/)|\.stories\.tsx$' && visual='true'
+
+        {
+          echo "code=${code}"
+          echo "components=${components}"
+          echo "visual=${visual}"
+          echo "files<<__EOF__"
+          echo "${changed}"
+          echo "__EOF__"
+        } >> "$GITHUB_OUTPUT"
+
+        echo "code=${code} components=${components} visual=${visual}"

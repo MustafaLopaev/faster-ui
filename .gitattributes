@@ -1,0 +1,3 @@
+# Visual baselines are binary evidence: git must never attempt a textual diff
+# on them, and a `git add -p` over an accepted baseline set must not stall.
+visual/baselines/*.png binary -diff

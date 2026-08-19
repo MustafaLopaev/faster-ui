@@ -51,8 +51,19 @@
    nothing else — the co-located stories, Jest specs and Cypress specs sit in
    the same folders and must not contribute classes to what consumers download.
    Anything that needs more (the dev playground, Storybook, Cypress CT) adds
-   its own `@source` in its own entry stylesheet. */
-@source '../components/**/*.tsx';
+   its own `@source` in its own entry stylesheet.
+
+   BOTH EXTENSIONS, BOTH FOLDERS. The class strings live in the `.styles.ts`
+   maps, not only in the `.tsx` that renders them, and the icon assets are
+   under `src/assets/`. A glob naming only the `.tsx` extension silently drops
+   every utility declared in a style map: the build still succeeds, the
+   stylesheet just comes out a third of its size and the components render
+   unstyled. `src/tokens/tokens.test.ts` asserts this file names both.
+   (Careful editing this comment — a glob containing a star-slash would close
+   it early, which is a CSS syntax error.) */
+@source '../components/**/*.{ts,tsx}';
+@source '../assets/**/*.{ts,tsx}';
 @source not '../components/**/*.stories.tsx';
+@source not '../components/**/*.test.ts';
 @source not '../components/**/*.test.tsx';
 @source not '../components/**/*.cy.tsx';

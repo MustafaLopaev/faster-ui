@@ -1,6 +1,7 @@
 # Faster UI
 
 [![CI](https://github.com/MustafaLopaev/faster-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/MustafaLopaev/faster-ui/actions/workflows/ci.yml)
+[![Visual](https://github.com/MustafaLopaev/faster-ui/actions/workflows/visual.yml/badge.svg)](https://github.com/MustafaLopaev/faster-ui/actions/workflows/visual.yml)
 [![npm](https://img.shields.io/npm/v/@mlopaev/faster-ui.svg)](https://www.npmjs.com/package/@mlopaev/faster-ui)
 [![license](https://img.shields.io/npm/l/@mlopaev/faster-ui.svg)](./LICENSE)
 
@@ -59,9 +60,42 @@ export function InviteFlow() {
 | `@mlopaev/faster-ui/a11y.css` | Optional — raises the palette to WCAG 2.1 AA ([why](#accessibility)) |
 
 Deep imports don't resolve; the four entries above are the whole surface.
-Exports: `Button` / `ButtonProps` / `ButtonSize` / `TextButtonProps` /
-`IconOnlyButtonProps`, `Input` / `InputProps` / `InputSize`,
-`Dialog` / `DialogProps` / `DialogSize`.
+Exports: `Button` / `ButtonProps` / `TextButtonProps` / `IconOnlyButtonProps`,
+`Input` / `InputProps`, `Dialog` / `DialogProps`, plus the prop-value tables
+below.
+
+### Prop values: strings or symbols, your choice
+
+Every `variant` / `size` prop is a union of string literals, so the ordinary
+form works and is fully type-checked — `variant="nope"` is a compile error:
+
+```tsx
+<Button variant="outline" size="lg" />
+```
+
+The same names are also exported as objects, for code that would rather not
+repeat string literals:
+
+```tsx
+import { Button, ButtonVariant, ButtonSize } from '@mlopaev/faster-ui'
+
+<Button variant={ButtonVariant.outline} size={ButtonSize.lg} />
+```
+
+`ButtonVariant`, `ButtonSize`, `ButtonTone`, `IconOnlyButtonVariant`,
+`InputSize`, `InputState` and `DialogSize` are each **both** a value and a
+type, so one import serves both positions:
+
+```tsx
+import { ButtonSize } from '@mlopaev/faster-ui'
+
+const big: ButtonSize = ButtonSize.lg // type position and value position
+```
+
+They are plain frozen-shape objects whose keys mirror their values
+(`ButtonVariant.outline === 'outline'`), deliberately not TypeScript `enum`s:
+an enum emits runtime code that cannot be erased, and typing the props as one
+would make `variant="outline"` a type error for every consumer.
 
 The stylesheet contains **no global resets** — only `fui`-prefixed tokens and
 utilities — so it cannot restyle your elements. Tailwind's preflight is
@@ -84,6 +118,25 @@ All three components are SSR-safe: no `window` or `document` access at module
 scope, and every DOM call sits inside an effect or an event handler. They
 render under `renderToString` with no DOM present. `Dialog` renders its markup
 on the server and promotes itself to the top layer on hydration.
+
+This is enforced, not asserted: every variant is server-rendered and hydrated in
+CI with both React error channels checked, and the built bundle is imported in a
+Node environment with no browser globals at all. A real Next.js App Router
+application is built and loaded headlessly on every change, and fails on any
+console error or warning.
+
+Two things a server-rendering consumer must do, both exercised by that fixture:
+
+```tsx
+'use client' // ① the package ships no directive; these components use hooks
+
+import { Button } from '@mlopaev/faster-ui'
+import '@mlopaev/faster-ui/styles.css' // ② the JS bundle imports no CSS
+```
+
+① Mark the module that imports them as a Client Component. ② Import the
+stylesheet yourself — `dist/index.js` contains no CSS import, which is what
+keeps the stylesheet separately overridable.
 
 ## Components
 
@@ -293,9 +346,17 @@ npm install
 | `npm run test:coverage` | Jest with the coverage thresholds enforced |
 | `npm run cy:ct` / `npm run cy:open` | Cypress component tests (real browser, real token CSS) |
 | `npm run lint` | oxlint (a11y + correctness rules, zero warnings allowed) |
+| `npm run lint:tokens` | Principle I: no raw colours or arbitrary visual values in components |
+| `npm run lint:workflows` | The workflow files' own safety invariants |
 | `npm run typecheck` | `tsc -b` across all four TS projects (lib / jest / cypress / node) |
 | `npm run build` | Library build → `dist/` (ESM + rolled-up types + stylesheets + size budget) |
 | `npm run build-storybook` | Static workbench build (CI artifact, deployed to Pages) |
+| `npm run test:ssr` | Server render → hydrate, plus a browserless import of the built bundle |
+| `npm run test:a11y` | axe across every variant × colour mode × palette |
+| `npm run test:consumers` | Packs the tarball and installs it into a Vite app, a Next.js app and a type-resolution fixture |
+| `npm run api:report` / `api:check` | Regenerate, or verify, the public surface record in `etc/` |
+| `npm run coverage:gate` | Props ↔ JSDoc ↔ Playground controls ↔ one story per variant |
+| `npm run visual:capture` / `visual:compare` / `visual:accept` | The 239-cell visual matrix (baselines are `ubuntu-latest`-only — see CONTRIBUTING.md) |
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the workflow, and
 [CHANGELOG.md](./CHANGELOG.md) for release notes.
