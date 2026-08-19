@@ -219,6 +219,38 @@ describe('<Dialog /> scrollable body (D8)', () => {
   })
 })
 
+describe('<Dialog /> dark mode (US5)', () => {
+  const INK_800 = 'rgb(38, 43, 51)' // surface-raised on dark
+  const WHITE_A7 = 'rgba(255, 255, 255, 0.07)' // border-strong on dark
+  const WHITE_A90 = 'rgba(255, 255, 255, 0.9)' // text-heading on dark
+
+  beforeEach(() => {
+    cy.document().then((doc) => doc.documentElement.classList.add('dark'))
+  })
+  afterEach(() => {
+    cy.document().then((doc) => doc.documentElement.classList.remove('dark'))
+  })
+
+  it('flips panel, title ink and dividers while the overlay scrim stays put', () => {
+    cy.viewport(1280, 800)
+    cy.mount(<Harness dividers startOpen />)
+    cy.get('dialog').should(($el) => {
+      const cs = getComputedStyle($el[0])
+      expect(cs.backgroundColor, 'panel flips to ink-800').to.eq(INK_800)
+      expect(
+        getComputedStyle($el[0], '::backdrop').backgroundColor,
+        'overlay unchanged (both-modes Figma smoke)',
+      ).to.eq(OVERLAY)
+    })
+    cy.get('dialog h2').should(($el) => {
+      expect(getComputedStyle($el[0]).color, 'title flips to white-a90').to.eq(WHITE_A90)
+    })
+    cy.get('dialog [data-divider]').each(($divider) => {
+      expect(getComputedStyle($divider[0]).borderTopColor, 'dividers flip to white-a7').to.eq(WHITE_A7)
+    })
+  })
+})
+
 describe('<Dialog /> dividers preset (D9)', () => {
   it('renders border-strong hairlines with the 16/24 padding rhythm', () => {
     cy.viewport(1280, 800)
