@@ -212,3 +212,48 @@ on `bg-[#ff0000]` naming file, line and rule; on the unmodified tree it passes.
 The **judgement** half — a token that is real, correctly prefixed and correctly
 spelled but *means* the wrong thing — stays advisory, because it cannot be a
 regex. Same split as `coverage-gate` versus `coverage-suggest`.
+
+---
+
+## F-9 — A restricted `allowedTools` silently removed the reviewers' ability to speak
+
+**Severity**: every model-driven check was inert. **Fixed** in this feature.
+
+**Found by**: actually running them. No amount of static checking would have
+caught it — the YAML is valid, the guards are correct, `npm run lint:workflows`
+passes, and three of the four jobs reported **success**.
+
+Injection hardening measure 1 restricts `--allowedTools` to read-only tools. What
+the contract did not record is that passing `--allowedTools` **replaces** the
+action's default set entirely — including `mcp__github_comment__update_claude_comment`,
+its own comment-posting tool. So every review job could read, reason and reach a
+verdict, and had no way to emit one.
+
+Measured on PR #9, the first live run:
+
+| Job | Turns | Cost | `is_error` | Comment posted |
+| --- | ----- | ---- | ---------- | -------------- |
+| `token-audit` | 31 | $1.50 | false | **none** |
+| `semver-classify` | — | — | false | **none** |
+| `coverage-suggest` | — | — | false | **none** |
+| `constitution-review` | 61 | $2.92 | **true**, 8 permission denials | **none** |
+
+Three jobs concluded successful having produced nothing at all. `constitution-review`
+spent $2.92 retrying a denied tool until it gave up — the honest failure, and the
+only reason the defect was visible rather than merely silent.
+
+**Fixed** by adding the comment tool to all five model-driven jobs. This does not
+weaken measure 1: that measure is about a job being unable to modify the
+repository, and posting a comment is the job's entire purpose — it is exactly
+what the deliberately-granted `pull-requests: write` permission is for.
+
+A second contributing cause, fixed alongside: `constitution-review` was told to
+read the whole diff in one command. At 10,700 lines that exhausts the turn budget
+before any judgement happens, and `Bash(git diff:*)` matches only commands
+*starting with* `git diff`, so the natural `| head` workaround is denied too. It
+now starts from `--stat` and reads individual files.
+
+**The general lesson**, worth more than the fix: a check that cannot report is
+indistinguishable from a check that found nothing. Three green jobs and an empty
+pull request looked exactly like a clean review. Any future model-driven check
+should be verified by observing its *output*, never by its exit code.
