@@ -2,7 +2,11 @@ import type { StorybookConfig } from '@storybook/react-vite'
 
 const config: StorybookConfig = {
   framework: '@storybook/react-vite',
-  stories: ['../src/**/*.stories.tsx'],
+  // The adversarial-content stories live under `visual/` because they are
+  // visual-regression fixtures rather than API documentation — a reader
+  // learning what Button does should not meet a 200-character label first.
+  // They are still reviewable in the workbench like anything else.
+  stories: ['../src/**/*.stories.tsx', '../visual/**/*.stories.tsx'],
   // addon-docs generates the autodocs pages the `autodocs` tag in
   // preview.tsx asks for; addon-a11y runs axe against every story.
   addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],

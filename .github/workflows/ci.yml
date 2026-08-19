@@ -45,6 +45,18 @@ jobs:
         env:
           CYPRESS_INSTALL_BINARY: '0'
       - run: npm run lint
+      # Structural safety invariants for the workflow files themselves (004):
+      # no required workflow touches the model credential, no job holds it
+      # without the guard and the fork condition, nothing uses
+      # `pull_request_target`. Static, instant, and it lives in `lint` because
+      # that is where "this file is shaped wrong" already belongs.
+      - run: npm run lint:workflows
+      # Principle I's mechanical half, from the same module the local
+      # PostToolUse hook uses. It exists as a BLOCKING gate because SC-013 asked
+      # what catches a hardcoded colour with the hooks disabled, and — before
+      # this — nothing deterministic did: oxlint has no Tailwind rules and the
+      # model-driven token audit is advisory by construction (FR-017).
+      - run: npm run lint:tokens
 
   typecheck:
     runs-on: ubuntu-latest
@@ -145,3 +157,136 @@ jobs:
           if echo "$files" | grep -qE '\.(test|cy|stories)\.|^src/'; then
             echo "::error::test, story or source files leaked into the tarball"; exit 1
           fi
+
+  # ── Quality automation layer (004) ────────────────────────────────────────
+  # Four deterministic gates. None needs a credential; all four run identically
+  # for forks, contributors and the maintainer, and each is its own PR check so
+  # a red verdict names one gate (FR-002).
+
+  # Computes the shared path sets once (documented in .github/workflows/README.md).
+  # A docs-only change matches none of them and every 004 gate below reports
+  # `skipped`, which GitHub counts as success — the run still gets a verdict (SC-004).
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      components: ${{ steps.filter.outputs.components }}
+      visual: ${{ steps.filter.outputs.visual }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/path-filter
+        id: filter
+        with:
+          base: ${{ github.event.pull_request.base.sha || github.event.before }}
+
+  ssr:
+    runs-on: ubuntu-latest
+    # `needs: build` rather than `install`: ssr-node's subject is the BUILT
+    # dist/index.js — what consumers execute — so a broken build makes this
+    # gate meaningless rather than merely slow (contract: deterministic-gates.md).
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+      - run: npm run build
+      - run: npm run test:ssr
+
+  consumers:
+    runs-on: ubuntu-latest
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Read locked Cypress version
+        id: cypress-version
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/cypress'].version")" >> "$GITHUB_OUTPUT"
+      # The Next.js fixture's headless load runs through Cypress (no second
+      # browser stack — research R-1), so this job needs the binary like the
+      # `cypress` and `a11y` jobs do.
+      - name: Restore Cypress binary cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
+      - run: npm ci
+      - run: npm run build
+      # Packs once and installs the TARBALL into each fixture — never a
+      # workspace link, which resolves through symlinks and is the classic way
+      # to miss a broken `exports` map (research R-8).
+      - run: npm run test:consumers
+      # The fixtures install into their own trees; the library's own lockfile
+      # must be untouched, or a framework has entered its dependency graph (FR-004).
+      - name: The root lockfile is untouched by fixture installs
+        run: git diff --exit-code package-lock.json
+
+  a11y:
+    runs-on: ubuntu-latest
+    needs: [install, changes]
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Read locked Cypress version
+        id: cypress-version
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/cypress'].version")" >> "$GITHUB_OUTPUT"
+      # Restored BEFORE npm ci so the postinstall binary download is a no-op on
+      # a hit — exactly as the `cypress` job does.
+      - name: Restore Cypress binary cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
+      - run: npm ci
+      - run: npm run test:a11y
+
+  api-surface:
+    runs-on: ubuntu-latest
+    needs: [build, changes]
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+      - run: npm run build
+      # Runs api-extractor WITHOUT --local: a drifted report exits non-zero
+      # instead of quietly rewriting the committed record.
+      - run: npm run api:check
+
+  coverage-gate:
+    runs-on: ubuntu-latest
+    needs: [install, changes]
+    if: needs.changes.outputs.components == 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+      # Props ↔ JSDoc ↔ Playground controls ↔ one story per union member.
+      # Detection is mechanical and blocks; WRITING the missing story is the
+      # advisory `coverage-suggest` job in review.yml (FR-023).
+      - run: npm run coverage:gate

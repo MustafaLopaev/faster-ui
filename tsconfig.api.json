@@ -1,0 +1,12 @@
+{
+  // api-extractor analyses the BUILT declaration file, not source (research R-7).
+  // The empty `types` array is the point of this file: the default configuration
+  // pulled @types/jsdom and @types/mdx into analysis and produced four unrelated
+  // warnings. Not referenced from tsconfig.json — `tsc -b` must not build it.
+  "extends": "./tsconfig.lib.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.api.tsbuildinfo",
+    "types": []
+  },
+  "include": ["dist/index.d.ts"]
+}
