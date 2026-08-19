@@ -15,8 +15,35 @@ export const Button: ForwardRefExoticComponent<ButtonProps & RefAttributes<HTMLB
 // @public (undocumented)
 export type ButtonProps = TextButtonProps | IconOnlyButtonProps;
 
+// @public
+export const ButtonSize: {
+    readonly sm: "sm";
+    readonly md: "md";
+    readonly lg: "lg";
+};
+
 // @public (undocumented)
-export type ButtonSize = 'sm' | 'md' | 'lg';
+export type ButtonSize = (typeof ButtonSize)[keyof typeof ButtonSize];
+
+// @public
+export const ButtonTone: {
+    readonly default: "default";
+    readonly danger: "danger";
+};
+
+// @public (undocumented)
+export type ButtonTone = (typeof ButtonTone)[keyof typeof ButtonTone];
+
+// @public
+export const ButtonVariant: {
+    readonly primary: "primary";
+    readonly outline: "outline";
+    readonly ghost: "ghost";
+    readonly link: "link";
+};
+
+// @public (undocumented)
+export type ButtonVariant = (typeof ButtonVariant)[keyof typeof ButtonVariant];
 
 // @public (undocumented)
 export const Dialog: ForwardRefExoticComponent<DialogProps & RefAttributes<HTMLDialogElement>>;
@@ -32,8 +59,15 @@ export interface DialogProps extends Omit<ComponentPropsWithoutRef<'dialog'>, 'o
     title?: ReactNode;
 }
 
+// @public
+export const DialogSize: {
+    readonly sm: "sm";
+    readonly md: "md";
+    readonly lg: "lg";
+};
+
 // @public (undocumented)
-export type DialogSize = 'sm' | 'md' | 'lg';
+export type DialogSize = (typeof DialogSize)[keyof typeof DialogSize];
 
 // Warning: (ae-forgotten-export) The symbol "ButtonBaseProps" needs to be exported by the entry point index.d.ts
 //
@@ -47,9 +81,18 @@ export interface IconOnlyButtonProps extends ButtonBaseProps {
     leftIcon?: never;
     // (undocumented)
     rightIcon?: never;
-    // (undocumented)
-    variant?: 'primary' | 'outline' | 'ghost';
+    variant?: IconOnlyButtonVariant;
 }
+
+// @public
+export const IconOnlyButtonVariant: {
+    readonly primary: "primary";
+    readonly outline: "outline";
+    readonly ghost: "ghost";
+};
+
+// @public (undocumented)
+export type IconOnlyButtonVariant = (typeof IconOnlyButtonVariant)[keyof typeof IconOnlyButtonVariant];
 
 // @public (undocumented)
 export const Input: ForwardRefExoticComponent<InputProps & RefAttributes<HTMLInputElement>>;
@@ -67,8 +110,25 @@ export interface InputProps extends Omit<ComponentPropsWithoutRef<'input'>, 'siz
     suffix?: ReactNode;
 }
 
+// @public
+export const InputSize: {
+    readonly sm: "sm";
+    readonly md: "md";
+    readonly lg: "lg";
+};
+
 // @public (undocumented)
-export type InputSize = 'sm' | 'md' | 'lg';
+export type InputSize = (typeof InputSize)[keyof typeof InputSize];
+
+// @public
+export const InputState: {
+    readonly default: "default";
+    readonly error: "error";
+    readonly disabled: "disabled";
+};
+
+// @public (undocumented)
+export type InputState = (typeof InputState)[keyof typeof InputState];
 
 // @public
 export interface TextButtonProps extends ButtonBaseProps {
@@ -77,7 +137,7 @@ export interface TextButtonProps extends ButtonBaseProps {
     iconOnly?: false;
     leftIcon?: ReactNode;
     rightIcon?: ReactNode;
-    variant?: 'primary' | 'outline' | 'ghost' | 'link';
+    variant?: ButtonVariant;
 }
 
 // (No @packageDocumentation comment for this package)

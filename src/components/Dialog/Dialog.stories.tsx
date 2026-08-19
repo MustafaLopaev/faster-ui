@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Button } from '../Button'
 import { Dialog } from './Dialog'
-import type { DialogProps } from './Dialog'
+import type { DialogProps } from './Dialog.types'
 
 const WarningIcon = (
   <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" className="fui:size-4 fui:shrink-0 fui:text-feedback-warning">

@@ -60,9 +60,42 @@ export function InviteFlow() {
 | `@mlopaev/faster-ui/a11y.css` | Optional — raises the palette to WCAG 2.1 AA ([why](#accessibility)) |
 
 Deep imports don't resolve; the four entries above are the whole surface.
-Exports: `Button` / `ButtonProps` / `ButtonSize` / `TextButtonProps` /
-`IconOnlyButtonProps`, `Input` / `InputProps` / `InputSize`,
-`Dialog` / `DialogProps` / `DialogSize`.
+Exports: `Button` / `ButtonProps` / `TextButtonProps` / `IconOnlyButtonProps`,
+`Input` / `InputProps`, `Dialog` / `DialogProps`, plus the prop-value tables
+below.
+
+### Prop values: strings or symbols, your choice
+
+Every `variant` / `size` prop is a union of string literals, so the ordinary
+form works and is fully type-checked — `variant="nope"` is a compile error:
+
+```tsx
+<Button variant="outline" size="lg" />
+```
+
+The same names are also exported as objects, for code that would rather not
+repeat string literals:
+
+```tsx
+import { Button, ButtonVariant, ButtonSize } from '@mlopaev/faster-ui'
+
+<Button variant={ButtonVariant.outline} size={ButtonSize.lg} />
+```
+
+`ButtonVariant`, `ButtonSize`, `ButtonTone`, `IconOnlyButtonVariant`,
+`InputSize`, `InputState` and `DialogSize` are each **both** a value and a
+type, so one import serves both positions:
+
+```tsx
+import { ButtonSize } from '@mlopaev/faster-ui'
+
+const big: ButtonSize = ButtonSize.lg // type position and value position
+```
+
+They are plain frozen-shape objects whose keys mirror their values
+(`ButtonVariant.outline === 'outline'`), deliberately not TypeScript `enum`s:
+an enum emits runtime code that cannot be erased, and typing the props as one
+would make `variant="outline"` a type error for every consumer.
 
 The stylesheet contains **no global resets** — only `fui`-prefixed tokens and
 utilities — so it cannot restyle your elements. Tailwind's preflight is
