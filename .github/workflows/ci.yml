@@ -51,6 +51,12 @@ jobs:
       # `pull_request_target`. Static, instant, and it lives in `lint` because
       # that is where "this file is shaped wrong" already belongs.
       - run: npm run lint:workflows
+      # Principle I's mechanical half, from the same module the local
+      # PostToolUse hook uses. It exists as a BLOCKING gate because SC-013 asked
+      # what catches a hardcoded colour with the hooks disabled, and — before
+      # this — nothing deterministic did: oxlint has no Tailwind rules and the
+      # model-driven token audit is advisory by construction (FR-017).
+      - run: npm run lint:tokens
 
   typecheck:
     runs-on: ubuntu-latest

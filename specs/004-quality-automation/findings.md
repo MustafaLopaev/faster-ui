@@ -175,3 +175,40 @@ font, for the same reason.
 
 Generalisable: *an assertion whose subject has a browser default cannot prove
 that CSS arrived.*
+
+---
+
+## F-8 — Nothing deterministic caught a hardcoded colour, and SC-013 is what revealed it
+
+**Severity**: a real hole in the pipeline. **Closed** in this feature, because
+closing it is automation work rather than a change to component behaviour, token
+values or the public API.
+
+SC-013 asks for the local hooks to be disabled, the same violation pushed, and
+the gate confirmed to fail anyway — *"this scenario tests the gate, not the
+hook"*. Run for real, it found what it was written to find.
+
+| Candidate gate | Catches `bg-[#ff0000]`? |
+| -------------- | ----------------------- |
+| `npm run lint` (oxlint) | **No.** oxlint has no Tailwind-arbitrary-value rule; the string is an ordinary string literal to it. |
+| `token-audit` review job | Yes — but it is **advisory by construction** (FR-017) and can never block a merge. |
+| `constitution-review` | Same: advisory. |
+| `visual-compare` | Only once baselines exist, and only if the colour actually moves a captured pixel. |
+
+So the local `PostToolUse` hook was the only thing enforcing Principle I's most
+mechanical rule — precisely the *"the hook has quietly become load-bearing"*
+state SC-013 exists to detect. The quickstart's expectation that "the
+`token-audit` and lint gates still fail" was not true of any blocking gate.
+
+**Closed by** `scripts/token-audit.mjs`, wired into the `lint` CI job as
+`npm run lint:tokens`. It shares its rule definitions with the hook through
+`scripts/token-rules.mjs` — one module, two consumers — so the two cannot drift
+apart. That sharing makes FR-036's "the hook enforces nothing new" structural
+rather than aspirational: they are literally the same rules.
+
+Verified both ways: with the hook bypassed entirely, `npm run lint:tokens` fails
+on `bg-[#ff0000]` naming file, line and rule; on the unmodified tree it passes.
+
+The **judgement** half — a token that is real, correctly prefixed and correctly
+spelled but *means* the wrong thing — stays advisory, because it cannot be a
+regex. Same split as `coverage-gate` versus `coverage-suggest`.
