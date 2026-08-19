@@ -45,6 +45,12 @@ jobs:
         env:
           CYPRESS_INSTALL_BINARY: '0'
       - run: npm run lint
+      # Structural safety invariants for the workflow files themselves (004):
+      # no required workflow touches the model credential, no job holds it
+      # without the guard and the fork condition, nothing uses
+      # `pull_request_target`. Static, instant, and it lives in `lint` because
+      # that is where "this file is shaped wrong" already belongs.
+      - run: npm run lint:workflows
 
   typecheck:
     runs-on: ubuntu-latest
