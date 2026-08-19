@@ -31,8 +31,8 @@ npm install
 ## Consuming the library
 
 ```tsx
-import { Button, Input, Dialog } from 'faster-ui'
-import 'faster-ui/styles.css' // once, at your app root
+import { Button, Input, Dialog } from '@mlopaev/faster-ui'
+import '@mlopaev/faster-ui/styles.css' // once, at your app root
 
 function InviteFlow() {
   const [open, setOpen] = useState(false)
@@ -58,7 +58,8 @@ function InviteFlow() {
 }
 ```
 
-- `faster-ui` and `faster-ui/styles.css` are the only two import surfaces;
+- `@mlopaev/faster-ui` and `@mlopaev/faster-ui/styles.css` are the only two
+  import surfaces;
   deep imports don't resolve. Exports: `Button`/`ButtonProps`,
   `Input`/`InputProps`, `Dialog`/`DialogProps`.
 - `react`/`react-dom` ≥19 are peer dependencies — your app provides React.
