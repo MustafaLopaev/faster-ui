@@ -1,0 +1,125 @@
+# CI — the seven quality gates (contract: specs/003-ci-release/contracts/ci-workflow.md).
+# Job names are API: PR checks, required-check config, and the README badge reference them.
+# Every gate runs its npm script verbatim — parity with local runs is the contract (FR-003).
+name: CI
+
+on:
+  push:
+    branches: ['**'] # branches only — tag pushes belong to release.yml
+  pull_request:
+  workflow_call: # release.yml re-runs the whole suite on the tagged commit
+
+# A newer push supersedes an in-progress run on the same ref; completed verdicts are never affected.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          # Non-cypress jobs skip the ~250MB binary download they never execute —
+          # the sole deliberate CI/local environment difference (research R-4).
+          CYPRESS_INSTALL_BINARY: '0'
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+      - run: npm run lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+      - run: npm run typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+      - run: npm test
+
+  cypress:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Read locked Cypress version
+        id: cypress-version
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/cypress'].version")" >> "$GITHUB_OUTPUT"
+      # Restored BEFORE npm ci so the postinstall binary download becomes a no-op on a hit;
+      # a cold cache just downloads again — duration changes, the verdict cannot (FR-004).
+      - name: Restore Cypress binary cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ steps.cypress-version.outputs.version }}
+      - run: npm ci
+      - run: npm run cy:ct
+
+  storybook:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+      - run: npm run build-storybook
+
+  build:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+      - run: npm run build
