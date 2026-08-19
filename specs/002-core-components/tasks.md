@@ -137,10 +137,10 @@ alone (`dark` class contract).
 **Independent Test**: Computed colors flip for representative cells with zero
 prop changes; all stories legible in the dark toolbar.
 
-- [ ] T027 [P] [US5] Add dark-mode context tests to src/components/Button/Button.cy.tsx: with `dark` on the root, outline/ghost surfaces flip (`surface-raised` → ink-800) while action colors stay brand (US5 scenario 2)
-- [ ] T028 [P] [US5] Add dark-mode context tests to src/components/Input/Input.cy.tsx: field fill, borders (`white-a7`), text (`text-control` → `white-a79`), placeholder-disabled flip per [data-model.md](data-model.md) §4
-- [ ] T029 [P] [US5] Add dark-mode context tests to src/components/Dialog/Dialog.cy.tsx: panel `surface-raised`, `text-heading` → `white-a90`, dividers `white-a7`, overlay unchanged
-- [ ] T030 [US5] Storybook dark sweep: review every story in the dark toolbar; fix any illegible derivation in src/tokens/tokens.css ONLY (zero component edits — Principle I rebrand path); confirm zero console errors/warnings in both modes
+- [X] T027 [P] [US5] Add dark-mode context tests to src/components/Button/Button.cy.tsx: with `dark` on the root, outline/ghost surfaces flip (`surface-raised` → ink-800) while action colors stay brand (US5 scenario 2)
+- [X] T028 [P] [US5] Add dark-mode context tests to src/components/Input/Input.cy.tsx: field fill, borders (`white-a7`), text (`text-control` → `white-a79`), placeholder-disabled flip per [data-model.md](data-model.md) §4
+- [X] T029 [P] [US5] Add dark-mode context tests to src/components/Dialog/Dialog.cy.tsx: panel `surface-raised`, `text-heading` → `white-a90`, dividers `white-a7`, overlay unchanged
+- [X] T030 [US5] Storybook dark sweep: review every story in the dark toolbar; fix any illegible derivation in src/tokens/tokens.css ONLY (zero component edits — Principle I rebrand path); confirm zero console errors/warnings in both modes
 
 **Checkpoint**: SC-003 satisfied — both modes verified
 

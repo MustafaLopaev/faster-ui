@@ -251,6 +251,54 @@ describe('<Button /> geometry (B10)', () => {
   })
 })
 
+describe('<Button /> dark mode (US5)', () => {
+  const INK_800 = 'rgb(38, 43, 51)' // surface-raised on dark
+
+  beforeEach(() => {
+    cy.document().then((doc) => doc.documentElement.classList.add('dark'))
+  })
+  afterEach(() => {
+    cy.document().then((doc) => doc.documentElement.classList.remove('dark'))
+  })
+
+  it('flips outline/ghost surfaces to the dark raised surface while action colors stay brand', () => {
+    cy.mount(
+      <div>
+        <Button variant="primary" data-cy="primary">
+          Primary
+        </Button>
+        <Button variant="outline" data-cy="outline">
+          Outline
+        </Button>
+        <Button variant="ghost" data-cy="ghost">
+          Ghost
+        </Button>
+        <Button iconOnly aria-label="Add" variant="outline" data-cy="icon-outline">
+          <svg viewBox="0 0 16 16" aria-hidden="true" className="fui:size-full">
+            <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        </Button>
+        <div data-cy="park" className="fui:h-25" />
+      </div>,
+    )
+    cy.get('[data-cy=park]').realHover()
+    // Outline surfaces follow surface-raised → ink-800 (A-2)
+    cy.get('[data-cy=outline]').should(($el) => {
+      expect(getComputedStyle($el[0]).backgroundColor, 'outline fill flips').to.eq(INK_800)
+    })
+    cy.get('[data-cy=icon-outline]').should(($el) => {
+      expect(getComputedStyle($el[0]).backgroundColor, 'iconOnly outline fill flips').to.eq(INK_800)
+    })
+    // Ghost keeps no fill; brand action colors stay light values (FR-013 fallback)
+    cy.get('[data-cy=ghost]').should(($el) => {
+      expect(getComputedStyle($el[0]).backgroundColor, 'ghost stays transparent').to.eq(TRANSPARENT)
+    })
+    cy.get('[data-cy=primary]').should(($el) => {
+      expect(getComputedStyle($el[0]).backgroundColor, 'brand action unchanged').to.eq(PRIMARY_600)
+    })
+  })
+})
+
 describe('<Button /> keyboard focus indicator (A11Y-004)', () => {
   it('shows the focus-ring token outline under :focus-visible', () => {
     cy.mount(<Button data-cy="target">Focus me</Button>)
