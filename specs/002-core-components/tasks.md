@@ -148,10 +148,10 @@ prop changes; all stories legible in the dark toolbar.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T031 [P] Run `/token-audit` over src/components/ — zero hardcoded colors/spacing/radius/typography or arbitrary visual values (SC-004); the only permitted arbitrary properties are the behavioral `appearance` resets (R-6)
-- [ ] T032 [P] Verify packaging surface (SC-006): `npm run build`; dist/index.d.ts exports exactly `Button`/`ButtonProps`/`Input`/`InputProps`/`Dialog`/`DialogProps`; dist/styles.css carries the token delta; no Smoke remnants anywhere (grep)
-- [ ] T033 Full local gate, everything at once: `npm run lint && npm run typecheck && npm test && env -u ELECTRON_RUN_AS_NODE npm run cy:ct && npm run build-storybook && npm run build` — all green (SC-007)
-- [ ] T034 [P] Update README.md and CLAUDE.md: component usage docs (Button/Input/Dialog with props tables), `src/lib/` no longer reserved, Smoke removed, radius-surface correction noted; cross-check [quickstart.md](quickstart.md) sign-off list
+- [X] T031 [P] Run `/token-audit` over src/components/ — zero hardcoded colors/spacing/radius/typography or arbitrary visual values (SC-004); the only permitted arbitrary properties are the behavioral `appearance` resets (R-6)
+- [X] T032 [P] Verify packaging surface (SC-006): `npm run build`; dist/index.d.ts exports exactly `Button`/`ButtonProps`/`Input`/`InputProps`/`Dialog`/`DialogProps`; dist/styles.css carries the token delta; no Smoke remnants anywhere (grep)
+- [X] T033 Full local gate, everything at once: `npm run lint && npm run typecheck && npm test && env -u ELECTRON_RUN_AS_NODE npm run cy:ct && npm run build-storybook && npm run build` — all green (SC-007)
+- [X] T034 [P] Update README.md and CLAUDE.md: component usage docs (Button/Input/Dialog with props tables), `src/lib/` no longer reserved, Smoke removed, radius-surface correction noted; cross-check [quickstart.md](quickstart.md) sign-off list
 
 ---
 
