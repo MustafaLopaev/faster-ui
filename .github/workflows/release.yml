@@ -1,0 +1,45 @@
+# Release — tag-triggered publication of @mlopaev/faster-ui
+# (contract: specs/003-ci-release/contracts/release-workflow.md).
+# Publishes ONLY behind the full quality suite, re-run on the tagged commit itself.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  # The complete gate suite, single-sourced from ci.yml (research R-2) —
+  # a gate added to CI later is automatically part of release gating.
+  quality:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+      - run: npm run build
+      - name: Verify tag matches package.json version
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          manifest_version="$(node -p "require('./package.json').version")"
+          if [ "$tag_version" != "$manifest_version" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version ${manifest_version} — aborting before publish (FR-010)."
+            exit 1
+          fi
+      # NPM_TOKEN is referenced here and nowhere else — structurally unreachable
+      # from PR-triggered runs (FR-012). Public access is declared in package.json#publishConfig.
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
