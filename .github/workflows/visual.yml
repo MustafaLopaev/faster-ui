@@ -94,6 +94,7 @@ jobs:
     if: github.event_name != 'schedule' && needs.changes.outputs.visual == 'true'
     outputs:
       to-judge: ${{ steps.compare.outputs.count }}
+      cold-start: ${{ steps.compare.outputs.cold-start }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -113,7 +114,9 @@ jobs:
           npm run visual:compare | tee compare.log
           status=${PIPESTATUS[0]}
           count=$(node -p "require('./visual/report.json').toJudge.length")
+          cold=$(node -p "String(require('./visual/report.json').coldStart === true)")
           echo "count=$count" >> "$GITHUB_OUTPUT"
+          echo "cold-start=$cold" >> "$GITHUB_OUTPUT"
           exit $status
       # Diffs and the manifest are the reviewable evidence — uploaded even when
       # the step above failed, which is exactly when they are wanted.
@@ -132,10 +135,17 @@ jobs:
     needs: [changes, visual-compare]
     # `always()` so judgment still runs when compare FAILED — a failing compare
     # is precisely the case with cells worth judging.
+    #
+    # `cold-start` is the exception. With no baseline set, EVERY cell is `new`,
+    # and judging all 239 against nothing to compare them to costs real money to
+    # characterise a change that has not happened. Baselines land first
+    # (`gh workflow run visual.yml -f accept-baselines=true`), and from then on
+    # this job sees only the cells a change actually moved.
     if: >-
       always() &&
       github.event_name != 'schedule' &&
       needs.changes.outputs.visual == 'true' &&
+      needs.visual-compare.outputs.cold-start != 'true' &&
       needs.visual-compare.outputs.to-judge != '0' &&
       github.event.pull_request.head.repo.full_name == github.repository
     steps:
