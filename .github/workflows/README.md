@@ -20,9 +20,21 @@ renaming one is a breaking change to repository settings.
 
 ---
 
+## The model provider
+
+Model-driven checks run on **Azure OpenAI** chat completions. The credential is
+the `AZURE_OPENAI_API_KEY` repository secret; the endpoint, deployment and API
+version come from the `AZURE_OPENAI_ENDPOINT` / `AZURE_OPENAI_DEPLOYMENT` /
+`AZURE_OPENAI_API_VERSION` repository variables. The one client is
+`scripts/azure-openai.mjs`; the per-job prompts and context-gathering live in
+`.github/scripts/model-jobs.mjs` (PR review, triage, changelog) and
+`scripts/visual-batch-judge.mjs` / `scripts/weekly-audit.mjs` (the scheduled
+paths). **The model holds no tools anywhere** — scripts gather every input
+deterministically and perform the one fixed action per job.
+
 ## The fork guard
 
-Every job that consumes `ANTHROPIC_API_KEY` carries this condition verbatim:
+Every job that consumes `AZURE_OPENAI_API_KEY` carries this condition verbatim:
 
 ```yaml
 if: github.event.pull_request.head.repo.full_name == github.repository
@@ -49,9 +61,9 @@ steps:
   - uses: ./.github/actions/claude-guard
     id: guard
     with:
-      api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+      api-key: ${{ secrets.AZURE_OPENAI_API_KEY }}
   - if: steps.guard.outputs.ok == 'true'
-    uses: anthropics/claude-code-action@v1
+    run: node .github/scripts/model-jobs.mjs <job>
 ```
 
 The step is skipped, the job concludes **successful**, and a `::notice::` explains
@@ -137,32 +149,22 @@ filtered job reports success rather than being absent from the run summary.
 
 ---
 
-## The comment tool must stay in `allowedTools`
+## How verdicts reach the pull request
 
-Every model-driven job lists `mcp__github_comment__update_claude_comment` in its
-`--allowedTools`. It looks like a write tool sitting in a read-only allowlist,
-and it is the obvious thing to "tidy away" during a security pass. Do not.
-
-Restricting `--allowedTools` replaces the action's default set entirely,
-including its own comment tool. Without it the agent runs, reads the diff,
-reaches a verdict — and has no way to say so. Verified the hard way on PR #9:
-`token-audit` completed cleanly in 31 turns and $1.50, `constitution-review`
-burned 61 turns, $2.92 and eight permission denials retrying a tool it was not
-allowed to call, and **zero comments appeared on the pull request**. Three jobs
-reported success while producing nothing.
-
-This does not weaken injection hardening measure 1. That measure is about a job
-being unable to modify the repository — no `contents: write`, no file-write
-tools, no push. Posting a comment is the job's entire output, and the
-`pull-requests: write` permission that allows it is granted deliberately.
-Findings F-9 in `specs/004-quality-automation/findings.md`.
+The script posts one **sticky comment** per job (`scripts/sticky-comment.mjs`,
+marker `<!-- model-job:<id> -->`) — re-runs update it in place. The
+`pull-requests: write` permission that allows it is granted deliberately; it is
+the job's entire output. Because the SCRIPT posts rather than the model calling
+a comment tool, the failure mode findings.md F-9 records against the retired
+agentic action — a verdict reached with no way to say so — is structurally
+gone.
 
 ## Large diffs
 
-`constitution-review` reads `git diff --stat` first and then individual files.
-Piping is not in the allowed command set (`Bash(git diff:*)` matches a command
-that *starts with* `git diff`, so `git diff … | head` is denied), and dumping a
-10,000-line diff in one turn exhausts the budget before anything is judged.
+The scripts bound what travels to the model by size (with an explicit
+truncation marker the prompt tells the model not to guess past), and exclude
+`visual/baselines` and `package-lock.json` from review diffs. There is no turn
+budget any more — one completion per job, capped by `max_completion_tokens`.
 
 ## Review mode — demo by default
 
@@ -171,11 +173,10 @@ that *starts with* `git diff`, so `git diff … | head` is denied), and dumping 
 | | `demo` (default) | `full` |
 | --- | --- | --- |
 | Jobs that run | `constitution-review` only | all four |
-| Model | Haiku 4.5 | Opus 5 |
-| Turn cap | 6 | 40 (25 for the others) |
-| Scope | exactly ONE changed source file, named in the prompt | the whole change |
-| Typical cost | cents | $1–6 on a large change |
+| Scope | exactly ONE changed source file, at most three findings | the whole change, size-capped |
+| Cost profile | one small completion | one large completion per job |
 
+Both modes use the same Azure OpenAI deployment (`AZURE_OPENAI_DEPLOYMENT`).
 To opt into full reviews:
 
 ```bash
@@ -183,6 +184,6 @@ gh variable set REVIEW_MODE --body full
 ```
 
 Demo is the default so the cost of a full review is always a deliberate opt-in
-(findings.md F-9). Every model-driven job also carries a `--max-turns` cap in
-both modes — not a substitute for a well-scoped prompt, but a bound on the
-damage when the prompt is wrong.
+(findings.md F-9). There are no agentic turns any more — each job is a single
+completion whose input the script bounds by size and whose output is capped by
+`max_completion_tokens`.
