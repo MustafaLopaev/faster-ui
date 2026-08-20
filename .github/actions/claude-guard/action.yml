@@ -1,6 +1,6 @@
 # The credential-absent contract (004 FR-019, contracts/review-jobs.md).
 #
-# Every model-driven job gates its Claude step on this action's `ok` output and
+# Every model-driven job gates its model step on this action's `ok` output and
 # CONCLUDES SUCCESSFUL when it is false. Credential-absent is a permanent state,
 # not a transitional one: forks never receive the secret, so a contributor must
 # still get a complete, non-red verdict from everything that does not need one
@@ -9,12 +9,12 @@
 #
 # The secret is passed as an INPUT because the `secrets` context is not available
 # inside a composite action. It is never echoed — only its emptiness is reported.
-name: Claude credential guard
+name: Model credential guard
 description: Reports whether a model-driven job has the credential it needs to run.
 
 inputs:
   api-key:
-    description: The ANTHROPIC_API_KEY repository secret, or an empty string when unset.
+    description: The AZURE_OPENAI_API_KEY repository secret, or an empty string when unset.
     required: false
     default: ''
 
@@ -38,5 +38,5 @@ runs:
           echo "Credential present — the model-driven step will run."
         else
           echo "ok=false" >> "$GITHUB_OUTPUT"
-          echo "::notice title=Model-driven check skipped::ANTHROPIC_API_KEY is not available to this run (fork pull request or unset secret). The job concludes successful by design — FR-019."
+          echo "::notice title=Model-driven check skipped::AZURE_OPENAI_API_KEY is not available to this run (fork pull request or unset secret). The job concludes successful by design — FR-019."
         fi

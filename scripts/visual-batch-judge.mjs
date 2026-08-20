@@ -1,38 +1,37 @@
 /**
- * The nightly full-matrix jury, on the Batch API (004 FR-038).
+ * The visual jury (004 FR-026/FR-027), on Azure OpenAI chat completions.
  *
- * WHY THIS EXISTS AT ALL, given the pull-request path already judges cells
- * through `anthropics/claude-code-action`: FR-038 requires checks that block
- * nothing to take the lower-cost asynchronous path, and the action does not
- * expose the Batch API. That is the sole justification for the
- * `@anthropic-ai/sdk` devDependency, and it is confined to this file.
+ * Judges exactly the cells `visual/report.json` names in `toJudge` — the pixel
+ * comparison has already settled every other cell, and re-judging them costs
+ * real money for nothing. Two callers, one script:
  *
- * The pull-request path judges the handful of cells a change moved, and does it
- * synchronously because a reviewer is waiting. This one judges the whole matrix
- * overnight, when nobody is, at roughly half the price.
+ *   - the nightly sweep (visual.yml `nightly-sweep`) after a full-matrix
+ *     capture and compare — no PR, so verdicts land in judgment.json only
+ *   - the pull-request path (visual.yml `visual-judge`), which sets PR_NUMBER
+ *     so the verdicts also land as one sticky comment
  *
- * The rubric is sent as a CACHED prefix. It is identical for every cell, so the
- * first request pays for it and the remaining ~238 read it back at about a tenth
- * of the cost. `cache_read_input_tokens` is reported at the end: a zero there
- * across a run of this size means the prefix is silently not caching, and
- * nothing else would tell you.
+ * The Anthropic Batch API this script was first written for is gone with the
+ * Azure migration; cells are judged through the shared client with a small
+ * concurrency pool instead. The rubric is sent as an identical prefix on every
+ * request so Azure's prompt cache absorbs the repetition — `logUsage` reports
+ * the cached-token count because a silently cold cache is invisible otherwise
+ * (FR-037).
  */
-import Anthropic from '@anthropic-ai/sdk'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { chat, hasCredential, imagePart, logUsage, usage } from './azure-openai.mjs'
+import { postStickyComment } from './sticky-comment.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const r = (p) => resolve(root, p)
 
-const MODEL = 'claude-opus-5'
-const POLL_INTERVAL_MS = 30_000
-const MAX_WAIT_MS = 6 * 60 * 60 * 1000
+const CONCURRENCY = 3
 
-if (!process.env.ANTHROPIC_API_KEY) {
+if (!hasCredential()) {
   // Credential-absent is a success outcome, never a failure (FR-019). Pass 2
   // has already run and already reported every difference.
-  console.log('ANTHROPIC_API_KEY is not set — skipping judgment. The comparison already ran.')
+  console.log('AZURE_OPENAI_API_KEY is not set — skipping judgment. The comparison already ran.')
   process.exit(0)
 }
 
@@ -68,17 +67,24 @@ if (cells.length === 0) {
 
 const rubric = readFileSync(r('visual/rubric.md'), 'utf8')
 
-const SCHEMA_INSTRUCTION = `Reply with a single JSON object and nothing else:
-{"cell":"<filename>","verdict":"PASS"|"WARN"|"FAIL","defect":"<names the defect, empty only when PASS>","confidence":"high"|"low"}`
+// Identical for every cell — the cacheable prefix.
+const SYSTEM = `You are the visual jury for a React component library. Judge one rendered cell.\n\n${rubric}`
 
-const imagePart = (path) => ({
-  type: 'image',
-  source: { type: 'base64', media_type: 'image/png', data: readFileSync(path).toString('base64') },
-})
+const SCHEMA = {
+  type: 'object',
+  required: ['verdict', 'defect', 'confidence'],
+  additionalProperties: false,
+  properties: {
+    verdict: { type: 'string', enum: ['PASS', 'WARN', 'FAIL'] },
+    defect: { type: 'string' },
+    confidence: { type: 'string', enum: ['high', 'low'] },
+  },
+}
 
-function requestFor(cell) {
+async function judge(cell) {
   const baseline = r(`visual/baselines/${cell}`)
   const current = r(`visual/current/${cell}`)
+  const diff = r(`visual/diff/${cell}`)
   const content = []
 
   if (existsSync(baseline)) {
@@ -91,87 +97,49 @@ function requestFor(cell) {
     })
   }
   content.push(imagePart(current))
-  content.push({ type: 'text', text: SCHEMA_INSTRUCTION })
-
-  return {
-    // The Batch API returns results out of order; the custom id is how a
-    // verdict finds its way back to a cell.
-    custom_id: cell.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 64),
-    params: {
-      model: MODEL,
-      max_tokens: 1024,
-      system: [
-        {
-          type: 'text',
-          text: `You are the visual jury for a React component library. Judge one rendered cell.\n\n${rubric}`,
-          // The whole point: identical for every request in the batch.
-          cache_control: { type: 'ephemeral' },
-        },
-      ],
-      messages: [{ role: 'user', content }],
-    },
+  if (existsSync(baseline) && existsSync(diff)) {
+    content.push({ type: 'text', text: 'DIFF — the differing pixels, highlighted' }, imagePart(diff))
   }
+
+  const { json } = await chat(
+    [
+      { role: 'system', content: SYSTEM },
+      { role: 'user', content },
+    ],
+    { maxTokens: 1024, schema: SCHEMA, schemaName: 'verdict' },
+  )
+  // FR-027: a non-PASS verdict without a stated defect is not a verdict.
+  if (json.verdict !== 'PASS' && !json.defect?.trim()) {
+    json.defect = 'NO DEFECT STATED — treat as unjudged'
+    json.confidence = 'low'
+  }
+  return { ...json, cell }
 }
 
-const client = new Anthropic()
-const requests = cells.map((cell) => requestFor(cell))
-const byCustomId = new Map(cells.map((cell) => [requestFor(cell).custom_id, cell]))
-
-console.log(`Submitting ${requests.length} cells to the Batch API…`)
-let batch = await client.messages.batches.create({ requests })
-console.log(`Batch ${batch.id} created.`)
-
-const deadline = Date.now() + MAX_WAIT_MS
-/* oxlint-disable no-await-in-loop -- polling is sequential by definition */
-while (batch.processing_status === 'in_progress') {
-  if (Date.now() > deadline) {
-    console.error(`✖ Batch ${batch.id} did not finish within the wait window.`)
-    process.exit(1)
-  }
-  await new Promise((done) => setTimeout(done, POLL_INTERVAL_MS))
-  batch = await client.messages.batches.retrieve(batch.id)
-  const c = batch.request_counts
-  console.log(`  ${batch.processing_status} — succeeded ${c.succeeded}, errored ${c.errored}`)
-}
+console.log(`Judging ${cells.length} cells (${CONCURRENCY} at a time)…`)
+const queue = [...cells]
+const verdicts = []
+/* oxlint-disable no-await-in-loop -- each worker drains the queue sequentially */
+await Promise.all(
+  Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
+    for (let cell = queue.shift(); cell !== undefined; cell = queue.shift()) {
+      try {
+        verdicts.push(await judge(cell))
+      } catch (error) {
+        verdicts.push({
+          cell,
+          verdict: 'WARN',
+          defect: `judgment did not complete: ${error.message}`,
+          confidence: 'low',
+        })
+      }
+      console.log(`  ${verdicts.length}/${cells.length} — ${verdicts.at(-1).verdict} ${cell}`)
+    }
+  }),
+)
 /* oxlint-enable no-await-in-loop */
 
-const verdicts = []
-const usage = { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0 }
-
-for await (const result of await client.messages.batches.results(batch.id)) {
-  const cell = byCustomId.get(result.custom_id) ?? result.custom_id
-  if (result.result.type !== 'succeeded') {
-    verdicts.push({
-      cell,
-      verdict: 'WARN',
-      defect: `judgment did not complete: ${result.result.type}`,
-      confidence: 'low',
-    })
-    continue
-  }
-  const message = result.result.message
-  for (const key of Object.keys(usage)) usage[key] += Number(message.usage?.[key] ?? 0)
-
-  const text = message.content.filter((b) => b.type === 'text').map((b) => b.text).join('')
-  try {
-    const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
-    // FR-027: a non-PASS verdict without a stated defect is not a verdict.
-    if (parsed.verdict !== 'PASS' && !parsed.defect?.trim()) {
-      parsed.defect = 'NO DEFECT STATED — treat as unjudged'
-      parsed.confidence = 'low'
-    }
-    verdicts.push({ ...parsed, cell })
-  } catch {
-    verdicts.push({
-      cell,
-      verdict: 'WARN',
-      defect: 'the reply could not be parsed as a verdict',
-      confidence: 'low',
-    })
-  }
-}
-
-writeFileSync(r('visual/judgment.json'), JSON.stringify({ batch: batch.id, usage, verdicts }, null, 2) + '\n')
+writeFileSync(r('visual/judgment.json'), JSON.stringify({ usage, verdicts }, null, 2) + '\n')
 
 const count = (v) => verdicts.filter((x) => x.verdict === v).length
 console.log(`\nJudged ${verdicts.length} cells — PASS ${count('PASS')}, WARN ${count('WARN')}, FAIL ${count('FAIL')}`)
@@ -179,17 +147,26 @@ for (const v of verdicts.filter((x) => x.verdict !== 'PASS')) {
   console.log(`  ${v.verdict} [${v.confidence}] ${v.cell}\n      ${v.defect}`)
 }
 
-console.log(
-  `\nUsage — input ${usage.input_tokens}, output ${usage.output_tokens}, cache read ${usage.cache_read_input_tokens}`,
-)
-if (usage.cache_read_input_tokens === 0 && verdicts.length > 1) {
-  console.log(
-    '⚠ Zero cache reads across a multi-cell batch. The rubric prefix is identical for\n' +
-      '  every request, so it should be read from cache after the first. A zero here means\n' +
-      "  caching is silently not working and this run cost ~10× what it should — nothing\n" +
-      '  else will tell you (FR-037).',
-  )
+// On the pull-request path the verdicts are also the review comment.
+if (process.env.PR_NUMBER) {
+  const nonPass = verdicts.filter((v) => v.verdict !== 'PASS')
+  const body = [
+    `**Visual jury — ${verdicts.length} moved cell(s): PASS ${count('PASS')}, WARN ${count('WARN')}, FAIL ${count('FAIL')}.**`,
+    '',
+    ...(nonPass.length
+      ? [
+          '| verdict | confidence | cell | defect |',
+          '| ------- | ---------- | ---- | ------ |',
+          ...nonPass.map((v) => `| ${v.verdict} | ${v.confidence} | \`${v.cell}\` | ${v.defect.replaceAll('|', '\\|')} |`),
+        ]
+      : ['Every judged cell passes the rubric.']),
+    '',
+    'The blocking half is the pixel comparison, which has already run.',
+  ].join('\n')
+  postStickyComment(process.env.PR_NUMBER, 'visual-judge', body)
 }
+
+logUsage('visual-judge')
 
 // Advisory. The blocking half is the pixel comparison, which has already run.
 process.exit(0)

@@ -82,6 +82,17 @@ This repo uses **spec-driven development** via GitHub spec-kit:
   node-verified corner radius; the foundation's 8px reading came from a demo
   artboard, and the `--fui-radius-8` primitive was deleted with it).
 - **Quality automation (004) — settled, don't re-litigate:**
+  - **Model-driven checks run on Azure OpenAI**, not the Anthropic API. The one
+    client is `scripts/azure-openai.mjs` (plain fetch; `@anthropic-ai/sdk` was
+    removed); prompts + context-gathering live in
+    `.github/scripts/model-jobs.mjs` (review/triage/changelog jobs) and in
+    `visual-batch-judge.mjs` / `weekly-audit.mjs`. Credential:
+    `AZURE_OPENAI_API_KEY` secret; endpoint/deployment/api-version:
+    `AZURE_OPENAI_*` repository variables. **The model holds no tools** —
+    scripts gather every input deterministically, the model returns text or
+    schema-validated JSON, and the script performs the one fixed action
+    (sticky comment via `scripts/sticky-comment.mjs`; for draft-changelog, a
+    new branch + PR). Local dry runs: `MODEL_JOBS_DRY_RUN=1`.
   - **axe's `color-contrast` is OFF on the `figma` palette and ON for `aa`.**
     The default palette fails AA by design (27 pinned deviations), so enabling
     it there fails nearly every component permanently — verified: enabling it
@@ -167,7 +178,11 @@ scripts/postbuild.mjs  copies a11y.css into dist + enforces the size budget
         check-workflows.mjs   the workflow files' own safety invariants
         consumer-smoke.mjs    pack → install → build → assert console clean
         visual-{capture,compare,accept}.mjs   the three visual passes
-        visual-batch-judge.mjs, weekly-audit.mjs   Batch API, scheduled only
+        azure-openai.mjs      the Azure OpenAI client — the only place the key is used
+        sticky-comment.mjs    one updatable PR comment per model job
+        visual-batch-judge.mjs   the visual jury (nightly sweep + PR path)
+        weekly-audit.mjs      the scheduled deep audit
+.github/scripts/model-jobs.mjs   review/triage/changelog jobs: gather → 1 completion → act
 visual/                matrix.ts (239 cells), capture.cy.ts, rubric.md,
                        fixtures/ (frozen adversarial content + its stories),
                        baselines/ (committed PNGs — ubuntu-latest ONLY)
