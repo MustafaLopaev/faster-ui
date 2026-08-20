@@ -27,6 +27,13 @@ file has no section for the version being released.
   `import type { ButtonSize }` usage is unaffected — the union type is still
   assignable from the same string literals.
 
+### Fixed
+
+- The exported const unions (`ButtonSize`, `ButtonVariant`, `ButtonTone`,
+  `IconOnlyButtonVariant`, `InputSize`, `InputState`, `DialogSize`) carry their
+  JSDoc again — the types/styles split had dropped it, so IntelliSense showed
+  them undocumented and `api:check` flagged the surface drift.
+
 ## [0.1.0] - 2026-08-19
 
 The first published release: Button, Input and Dialog on a Figma-extracted

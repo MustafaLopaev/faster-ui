@@ -1,5 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
+/** Panel width: sm 400 / md 600 / lg 900, viewport-capped. */
 export const DialogSize = {
   sm: "sm",
   md: "md",

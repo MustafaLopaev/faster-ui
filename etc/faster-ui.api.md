@@ -49,7 +49,7 @@ export type ButtonVariant = (typeof ButtonVariant)[keyof typeof ButtonVariant];
 export const Dialog: ForwardRefExoticComponent<DialogProps & RefAttributes<HTMLDialogElement>>;
 
 // @public (undocumented)
-export interface DialogProps extends Omit<ComponentPropsWithoutRef<'dialog'>, 'open' | 'onClose' | 'title'> {
+export interface DialogProps extends Omit<ComponentPropsWithoutRef<"dialog">, "open" | "onClose" | "title"> {
     dividers?: boolean;
     footer?: ReactNode;
     onClose: () => void;
@@ -73,7 +73,7 @@ export type DialogSize = (typeof DialogSize)[keyof typeof DialogSize];
 //
 // @public
 export interface IconOnlyButtonProps extends ButtonBaseProps {
-    'aria-label': string;
+    "aria-label": string;
     // (undocumented)
     danger?: never;
     iconOnly: true;
@@ -98,7 +98,7 @@ export type IconOnlyButtonVariant = (typeof IconOnlyButtonVariant)[keyof typeof 
 export const Input: ForwardRefExoticComponent<InputProps & RefAttributes<HTMLInputElement>>;
 
 // @public (undocumented)
-export interface InputProps extends Omit<ComponentPropsWithoutRef<'input'>, 'size' | 'prefix'> {
+export interface InputProps extends Omit<ComponentPropsWithoutRef<"input">, "size" | "prefix"> {
     clearable?: boolean;
     error?: string;
     label?: ReactNode;

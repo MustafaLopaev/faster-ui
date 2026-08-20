@@ -1,5 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
+/** Figma Small/Medium/Large (24/36/40px). */
 export const ButtonSize = {
   sm: "sm",
   md: "md",
@@ -7,6 +8,7 @@ export const ButtonSize = {
 } as const;
 export type ButtonSize = (typeof ButtonSize)[keyof typeof ButtonSize];
 
+/** Visual style; maps 1:1 to the Figma text-button sets. */
 export const ButtonVariant = {
   primary: "primary",
   outline: "outline",
@@ -15,6 +17,10 @@ export const ButtonVariant = {
 } as const;
 export type ButtonVariant = (typeof ButtonVariant)[keyof typeof ButtonVariant];
 
+/**
+ * Figma defines icon-only sets only for these three variants in the default
+ * tone (A-11) — `link` has no box to draw a circle around.
+ */
 export const IconOnlyButtonVariant = {
   primary: ButtonVariant.primary,
   outline: ButtonVariant.outline,
@@ -23,6 +29,10 @@ export const IconOnlyButtonVariant = {
 export type IconOnlyButtonVariant =
   (typeof IconOnlyButtonVariant)[keyof typeof IconOnlyButtonVariant];
 
+/**
+ * Which colour family a variant draws from. Internal: consumers select it with
+ * the `danger` boolean, which reads better at the call site than `tone="danger"`.
+ */
 export const ButtonTone = {
   default: "default",
   danger: "danger",
