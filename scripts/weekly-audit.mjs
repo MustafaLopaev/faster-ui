@@ -117,7 +117,14 @@ const date = new Date().toISOString().slice(0, 10)
 const title = `${ISSUE_TITLE_PREFIX} ${date}`
 writeFileSync(r('audit-report.md'), body + '\n')
 
-gh(['issue', 'create', '--title', title, '--body-file', r('audit-report.md'), '--label', 'audit'], true)
+// Loud on failure: an audit that runs and tells nobody is the silent-failure
+// class this pipeline exists to prevent. (First hit: the `audit` label did not
+// exist on the repo and `gh issue create` failed invisibly for it.)
+const created = gh(['issue', 'create', '--title', title, '--body-file', r('audit-report.md'), '--label', 'audit'])
+if (!created) {
+  console.error('✖ The audit ran but the issue was not created. The report is in the run artifact.')
+  process.exitCode = 1
+}
 
 console.log(`\n${title}\n`)
 console.log(body.slice(0, 2000))
