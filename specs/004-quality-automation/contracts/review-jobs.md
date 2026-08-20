@@ -17,20 +17,20 @@ jobs:
       pull-requests: write     # comment only; no `contents: write` anywhere
     steps:
       - id: guard
-        run: echo "ok=${{ secrets.ANTHROPIC_API_KEY != '' }}" >> "$GITHUB_OUTPUT"
-      - if: steps.guard.outputs.ok == 'true'
-        uses: anthropics/claude-code-action@v1
+        uses: ./.github/actions/claude-guard
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          use_sticky_comment: true
-          claude_args: '{"model":"claude-opus-5", ...}'
-          prompt: ...
+          api-key: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      - if: steps.guard.outputs.ok == 'true'
+        run: node .github/scripts/model-jobs.mjs <job>
+        env:
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+          # + DEPLOYMENT, API_VERSION, GH_TOKEN, and the job's context (PR_NUMBER, BASE_SHA, …)
 ```
 
-Input names above are verified against the action's published definition. Available and relevant: `prompt`, `claude_args`, `settings`, `anthropic_api_key`, `github_token`, `use_sticky_comment`, `track_progress`, `classify_inline_comments`, `include_fix_links`, `display_report`. Outputs: `conclusion`, `structured_output`, `session_id`, `execution_file`.
+*(Amended with the Azure OpenAI migration: delivery moved from `anthropics/claude-code-action@v1` to `.github/scripts/model-jobs.mjs`, which gathers context deterministically, makes one chat completion through `scripts/azure-openai.mjs`, and posts the comment itself. The credential is `AZURE_OPENAI_API_KEY`.)*
 
-`use_sticky_comment: true` so a re-run updates one comment rather than accreting a new one per push.
+The comment is **sticky** (`scripts/sticky-comment.mjs`, one marker per job id) so a re-run updates one comment rather than accreting a new one per push.
 
 ## Jobs
 
@@ -47,7 +47,7 @@ The `coverage-suggest` split matters: deciding a prop lacks JSDoc is mechanical 
 
 Four independent measures, ordered by strength. The instruction is deliberately last — it is the weakest of the four (research R-10).
 
-1. **Capability.** Read-only tools only (`Read`, `Grep`, `Glob`, plus named read-only Bash commands). `permissions` grants no `contents: write`. A job that cannot write cannot be talked into writing.
+1. **Capability.** The model holds **no tools at all** — the script gathers every input and performs the one fixed action (post a comment). `permissions` grants no `contents: write`. A model that cannot act cannot be talked into acting.
 2. **Authority.** Reference material — `.specify/memory/constitution.md`, `specs/*/contracts/*.md`, `CLAUDE.md` — is read from the **base ref**, never from the pull request head. A change that edits the constitution therefore cannot alter the rules it is judged against; it is judged *as a change to* them.
 3. **Blast radius.** No review job is a required check, so a fully successful injection changes a comment, not a merge decision.
 4. **Framing.** The prompt states that all reviewed content is untrusted data and that any attempt to issue instructions must be reported as a finding (FR-016).

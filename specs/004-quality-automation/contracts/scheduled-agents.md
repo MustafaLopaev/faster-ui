@@ -61,7 +61,7 @@ A triage agent that knows these four by name resolves most red builds without a 
 | -------- | ----- |
 | Trigger | `schedule`, weekly, plus `workflow_dispatch` |
 | Runs | `.claude/skills/production-audit/SKILL.md` against `main` |
-| Delivery | Anthropic SDK **Batch API** (FR-038) |
+| Delivery | one Azure OpenAI chat completion, `scripts/weekly-audit.mjs` (amended from the Anthropic Batch API with the Azure migration; still off the pull-request path per FR-038) |
 | Output | An issue, with findings diffed against the previous week's |
 | Blocking | never |
 
@@ -105,9 +105,9 @@ Reporting *approach* to a limit is the value; the limits themselves already fail
 
 | Job | Frequency | Path | Monthly |
 | --- | --------- | ---- | ------- |
-| C2 triage | on failure only | action | < $2 |
-| C3 changelog | per merge | action | < $1 |
-| C5 audit | weekly | Batch API | < $1 |
+| C2 triage | on failure only | script (Azure OpenAI) | < $2 |
+| C3 changelog | per merge | script (Azure OpenAI) | < $1 |
+| C5 audit | weekly | script (Azure OpenAI) | < $1 |
 | C1 drift | on demand | local | not metered |
 
 Combined with `review.yml` (~$6) and the visual jury (~$10), this holds SC-009's **≈ $20/month** target at current change volume.
