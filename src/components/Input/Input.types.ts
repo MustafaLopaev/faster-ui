@@ -1,5 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
+/** Figma Small/Medium/Large (24/36/40px). */
 export const InputSize = {
   sm: "sm",
   md: "md",
@@ -7,6 +8,7 @@ export const InputSize = {
 } as const;
 export type InputSize = (typeof InputSize)[keyof typeof InputSize];
 
+/** Visual state the field resolves to — derived from `error`/`disabled`, never passed directly. */
 export const InputState = {
   default: "default",
   error: "error",
