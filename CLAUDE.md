@@ -182,6 +182,7 @@ scripts/postbuild.mjs  copies a11y.css into dist + enforces the size budget
         sticky-comment.mjs    one updatable PR comment per model job
         visual-batch-judge.mjs   the visual jury (nightly sweep + PR path)
         weekly-audit.mjs      the scheduled deep audit
+        run-report.mjs        the overall results HTML (report.yml, end of pipeline)
 .github/scripts/model-jobs.mjs   review/triage/changelog jobs: gather → 1 completion → act
 visual/                matrix.ts (239 cells), capture.cy.ts, rubric.md,
                        fixtures/ (frozen adversarial content + its stories),
@@ -221,6 +222,8 @@ npm run coverage:gate    # props ↔ JSDoc ↔ Playground ↔ variant stories
 npm run visual:capture   # 239 cells → visual/current/ (needs storybook-static/)
 npm run visual:compare   # diff against baselines → visual/report.json
 npm run visual:accept    # adopt captures as baselines (Linux only)
+npm run report           # aggregate a commit's runs → overall-report.html
+                         # (CI runs it automatically: report.yml on CI completion)
 ```
 
 Quirk: in shells where `ELECTRON_RUN_AS_NODE=1` is exported (e.g. VS Code
