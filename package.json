@@ -78,7 +78,8 @@
     "visual:accept": "node scripts/visual-accept.mjs",
     "coverage:gate": "node scripts/coverage-gate.mjs",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "report": "node scripts/run-report.mjs"
   },
   "peerDependencies": {
     "react": "^19.0.0",
