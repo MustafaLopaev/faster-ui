@@ -26,8 +26,9 @@
  *   npm run report && open overall-report.html
  */
 import { spawnSync } from 'node:child_process'
-import { appendFileSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { appendFileSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -190,6 +191,26 @@ const details = runs.map((run) => ({
   artifacts: ghJson(`repos/${repo}/actions/runs/${run.id}/artifacts`)?.artifacts ?? [],
 }))
 
+// Every AI job records what it did — outcome, deployment, token usage — in a
+// `model-usage-*` artifact (written by azure-openai.mjs logUsage). Collect
+// them all: this is the report's account of the agent runs themselves, and it
+// covers the jobs that never post a PR comment (the changelog drafter, the
+// weekly audit, the nightly sweep).
+const aiRuns = []
+for (const { run, artifacts } of details) {
+  for (const artifact of artifacts.filter((a) => a.name.startsWith('model-usage'))) {
+    const dir = mkdtempSync(join(tmpdir(), 'model-usage-'))
+    sh('gh', ['run', 'download', String(run.id), '-R', repo, '-n', artifact.name, '-D', dir])
+    try {
+      for (const rec of JSON.parse(readFileSync(join(dir, 'model-usage.json'), 'utf8'))) {
+        aiRuns.push({ ...rec, workflow: run.name, event: run.event, runUrl: run.html_url })
+      }
+    } catch {
+      console.log(`  ⚠ could not read ${artifact.name} from ${run.name} run ${run.id}.`)
+    }
+  }
+}
+
 // The model jobs' verdicts live as sticky comments on the PR, one marker each.
 const modelComments = pr
   ? (ghJson(`repos/${repo}/issues/${pr.number}/comments?per_page=100`) ?? [])
@@ -258,10 +279,50 @@ const workflowSection = ({ run, jobs, artifacts }) => `
     }
   </section>`
 
+const aiTotals = aiRuns.reduce(
+  (t, run) => ({
+    calls: t.calls + (run.calls ?? 0),
+    prompt: t.prompt + (run.prompt_tokens ?? 0),
+    completion: t.completion + (run.completion_tokens ?? 0),
+    cached: t.cached + (run.cached_tokens ?? 0),
+  }),
+  { calls: 0, prompt: 0, completion: 0, cached: 0 },
+)
+const aiSection = aiRuns.length
+  ? `
+  <section class="card">
+    <div class="card-head"><h2>AI agent runs</h2>
+      <div class="card-meta"><span class="event">Azure OpenAI · advisory — none of these can block a merge</span></div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Agent</th><th>What it did</th><th>Calls</th><th>Prompt</th><th>Completion</th><th>Cached</th></tr></thead>
+      <tbody>
+        ${aiRuns
+          .map(
+            (run) => `<tr>
+          <td><a href="${esc(run.runUrl)}"><code>${esc(run.job)}</code></a><div class="event">${esc(run.workflow)} · ${esc(run.event)} · ${esc(run.deployment ?? '')}</div></td>
+          <td>${esc(run.outcome || '—')}</td>
+          <td class="dur">${run.calls ?? 0}</td>
+          <td class="dur">${run.prompt_tokens ?? 0}</td>
+          <td class="dur">${run.completion_tokens ?? 0}</td>
+          <td class="dur">${run.cached_tokens ?? 0}</td>
+        </tr>`,
+          )
+          .join('\n')}
+      </tbody>
+    </table></div>
+    <p class="artifacts">Totals: ${aiTotals.calls} call(s) · ${aiTotals.prompt} prompt + ${aiTotals.completion} completion tokens · cache covered ${Math.round((aiTotals.cached / Math.max(1, aiTotals.prompt)) * 100)}% of prompt tokens (FR-037: watch for this staying at 0%).</p>
+  </section>`
+  : `
+  <section class="card">
+    <div class="card-head"><h2>AI agent runs</h2></div>
+    <p class="artifacts">No AI agent ran for this commit — path-filtered, mode-gated, credential absent, or runs that predate the usage record.</p>
+  </section>`
+
 const modelSection = modelComments.length
   ? `
   <section class="card">
-    <div class="card-head"><h2>Model-driven verdicts</h2>
+    <div class="card-head"><h2>AI verdicts on the pull request</h2>
       <div class="card-meta"><span class="event">advisory — none of these can block a merge</span></div>
     </div>
     ${modelComments
@@ -323,7 +384,8 @@ const html = `<!doctype html>
   .card-meta { display: flex; align-items: center; gap: 12px; }
   .event { color: var(--ink-3); font-size: 13px; }
   .dur { color: var(--ink-2); font-size: 13px; font-variant-numeric: tabular-nums; }
-  .table-wrap, table { width: 100%; }
+  .table-wrap { width: 100%; overflow-x: auto; }
+  table { width: 100%; }
   table { border-collapse: collapse; margin-top: 10px; }
   th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
        color: var(--ink-3); font-weight: 600; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--border); }
@@ -373,6 +435,7 @@ const html = `<!doctype html>
   </div>
 
   ${details.map(workflowSection).join('\n')}
+  ${aiSection}
   ${modelSection}
 
   <footer>
@@ -393,7 +456,11 @@ const rows = details.map(({ run }) => {
   return `| [${run.name}](${run.html_url}) | ${run.event} | ${s.icon} ${s.label} | ${fmtDuration(run.run_started_at, run.updated_at)} |`
 })
 const table = ['| Workflow | Event | Result | Duration |', '| -------- | ----- | ------ | -------- |', ...rows].join('\n')
-const headline = `${overallIcon} **${overallText}** — ${tally.pass} passed, ${tally.fail} failed, ${tally.skipped} skipped across ${details.length} workflow(s)`
+const headline =
+  `${overallIcon} **${overallText}** — ${tally.pass} passed, ${tally.fail} failed, ${tally.skipped} skipped across ${details.length} workflow(s)` +
+  (aiRuns.length
+    ? `; ${aiRuns.length} AI agent run(s): ${aiRuns.map((run) => `\`${run.job}\``).join(', ')}`
+    : '; no AI agent ran')
 
 writeFileSync(r('report-meta.json'), JSON.stringify({ sha, prNumber: pr?.number ?? null, headline, table }, null, 2) + '\n')
 
