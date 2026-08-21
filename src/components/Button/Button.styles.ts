@@ -19,9 +19,9 @@ export const BUTTON_LINK_SIZE: Record<ButtonSize, string> = {
 };
 
 export const BUTTON_ICON_ONLY_SIZE: Record<ButtonSize, string> = {
-  [ButtonSize.lg]: "fui:size-10 fui:p-2.75 fui:text-subtitle fui:rounded-full",
-  [ButtonSize.md]: "fui:size-9 fui:p-2.5 fui:text-body fui:rounded-full",
-  [ButtonSize.sm]: "fui:size-6 fui:p-1.25 fui:text-caption fui:rounded-full",
+  [ButtonSize.lg]: "fui:size-10 fui:p-2.75 fui:text-subtitle fui:rounded-control",
+  [ButtonSize.md]: "fui:size-9 fui:p-2.5 fui:text-body fui:rounded-control",
+  [ButtonSize.sm]: "fui:size-6 fui:p-1.25 fui:text-caption fui:rounded-control",
 };
 
 export const BUTTON_ICON_SLOT: Record<ButtonSize, string> = {
