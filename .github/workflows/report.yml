@@ -1,0 +1,66 @@
+# The overall results report — the pipeline's closing act.
+#
+# Fires when CI completes (any conclusion — a red run is exactly when the
+# report is wanted), waits briefly for the commit's other workflows (Review,
+# Visual) to settle, and renders EVERYTHING that ran for that commit into one
+# self-contained `overall-report.html`: every workflow, every job with its
+# conclusion and duration, the model-driven verdict comments, and each run's
+# artifacts. Uploaded as the `overall-report` artifact and linked from a
+# sticky pull-request comment.
+#
+# No model credential anywhere in this file — the report is deterministic
+# aggregation, `actions: read` plus the comment. It never blocks anything.
+name: Report
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      head-sha:
+        description: 'Commit to report on (defaults to the ref this dispatch runs from)'
+        type: string
+        default: ''
+
+concurrency:
+  group: report-${{ github.event.workflow_run.head_sha || inputs.head-sha || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read # enumerate the commit's runs, jobs and artifacts
+  pull-requests: write # the sticky summary comment, and nothing else
+
+jobs:
+  overall-report:
+    runs-on: ubuntu-latest
+    # Fork head refs carry no secrets and their PR comments are posted by the
+    # base-repo runs already; only report on this repository's own commits.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.head_repository.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Gather every run for the commit and render the report
+        run: node scripts/run-report.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha || inputs.head-sha || github.sha }}
+
+      - uses: actions/upload-artifact@v7
+        id: upload
+        with:
+          name: overall-report
+          path: |
+            overall-report.html
+            report-meta.json
+          retention-days: 30
+
+      # Phase 2 needs the artifact URL, which only exists after the upload.
+      - name: Post the sticky summary comment on the pull request
+        run: node scripts/run-report.mjs comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
