@@ -161,65 +161,27 @@ jobs:
       - uses: ./.github/actions/claude-guard
         id: guard
         with:
-          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          api-key: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      # The same jury script as the nightly sweep: it judges the cells named in
+      # `visual/report.json` `toJudge` and ONLY those (every other cell is
+      # already settled by the pixel comparison), sends baseline + current +
+      # diff per cell with visual/rubric.md as the authority, and — because
+      # PR_NUMBER is set — posts the verdicts as one sticky comment. It cannot
+      # block; the blocking half is the pixel comparison, which has already run.
       - if: steps.guard.outputs.ok == 'true'
-        id: judge
-        uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          use_sticky_comment: true
-          claude_args: |
-            --model claude-opus-5
-            --max-turns 30
-            --allowedTools "Read,Glob,Bash(cat visual/report.json),mcp__github_comment__update_claude_comment"
-            --json-schema '{"type":"array","items":{"type":"object","required":["cell","verdict","defect","confidence"],"additionalProperties":false,"properties":{"cell":{"type":"string","minLength":1},"verdict":{"type":"string","enum":["PASS","WARN","FAIL"]},"defect":{"type":"string"},"confidence":{"type":"string","enum":["high","low"]}}}}'
-          prompt: |
-            Judge the rendered cells this change moved.
-
-            Read `visual/rubric.md` FIRST and in full — it defines the verdicts,
-            what counts as a defect, and the list of recorded deviations you must
-            never report. It is the authority here; this prompt only points at it.
-
-            `visual/report.json` names the cells to judge in `toJudge`. Judge
-            those and ONLY those — every other cell is already settled by the
-            pixel comparison, and re-judging them costs roughly 12× for nothing.
-
-            For each cell:
-              - `visual/baselines/<cell>` is what it looked like before
-              - `visual/current/<cell>`   is what it looks like now
-              - `visual/diff/<cell>`      highlights the differing pixels, when
-                the cell had a baseline at all
-            A `new` cell has no baseline; judge the current image on its own
-            merits and say what it shows.
-
-            The filename carries the cell's identity — story, theme, palette,
-            viewport, text scale, writing direction, motion, content — and half
-            the time it tells you what to look for before you open the image. A
-            cell ending `-360-200-ltr-default-story` is the tightest viewport at
-            200% text scaling: look for clipping.
-
-            `defect` is REQUIRED and non-empty whenever the verdict is not
-            `PASS`, and must name the defect — "the label is clipped at the right
-            edge, the last four characters cut off by the 360px viewport", never
-            "differs from baseline". The second says only what the comparison
-            already said.
-
-            Use `confidence: low` rather than guessing. A low-confidence cell
-            gets a human; a confidently wrong PASS gets shipped.
-
-            You cannot block this pull request. The blocking half is the pixel
-            comparison, which has already run.
-      - name: Log model usage
-        if: steps.guard.outputs.ok == 'true' && always()
+        run: node scripts/visual-batch-judge.mjs
         env:
-          EXECUTION_FILE: ${{ steps.judge.outputs.execution_file }}
-        run: node .github/scripts/log-usage.mjs visual-judge "$EXECUTION_FILE"
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ vars.AZURE_OPENAI_DEPLOYMENT }}
+          AZURE_OPENAI_API_VERSION: ${{ vars.AZURE_OPENAI_API_VERSION }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
 
-  # ── Nightly full sweep, through the Batch API ─────────────────────────────
-  # The whole matrix rather than the changed slice, on the lower-cost
-  # asynchronous path (FR-038). The action does not expose the Batch API, which
-  # is the sole justification for the @anthropic-ai/sdk devDependency.
+  # ── Nightly full sweep ────────────────────────────────────────────────────
+  # The whole matrix rather than the changed slice, off the pull-request path
+  # (FR-038) — the same jury script as visual-judge, just with no PR to comment
+  # on, so the verdicts land in the nightly-visual artifact.
   nightly-sweep:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
@@ -244,11 +206,14 @@ jobs:
       - uses: ./.github/actions/claude-guard
         id: guard
         with:
-          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          api-key: ${{ secrets.AZURE_OPENAI_API_KEY }}
       - if: steps.guard.outputs.ok == 'true'
         run: node scripts/visual-batch-judge.mjs
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ vars.AZURE_OPENAI_DEPLOYMENT }}
+          AZURE_OPENAI_API_VERSION: ${{ vars.AZURE_OPENAI_API_VERSION }}
       - uses: actions/upload-artifact@v7
         if: always()
         with:
