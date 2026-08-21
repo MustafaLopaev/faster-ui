@@ -177,6 +177,12 @@ jobs:
           AZURE_OPENAI_API_VERSION: ${{ vars.AZURE_OPENAI_API_VERSION }}
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+      - uses: actions/upload-artifact@v7
+        if: steps.guard.outputs.ok == 'true'
+        with:
+          name: model-usage-visual-judge
+          path: model-usage.json
+          if-no-files-found: ignore
 
   # ── Nightly full sweep ────────────────────────────────────────────────────
   # The whole matrix rather than the changed slice, off the pull-request path
@@ -214,6 +220,12 @@ jobs:
           AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_DEPLOYMENT: ${{ vars.AZURE_OPENAI_DEPLOYMENT }}
           AZURE_OPENAI_API_VERSION: ${{ vars.AZURE_OPENAI_API_VERSION }}
+      - uses: actions/upload-artifact@v7
+        if: steps.guard.outputs.ok == 'true'
+        with:
+          name: model-usage-nightly-sweep
+          path: model-usage.json
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v7
         if: always()
         with:

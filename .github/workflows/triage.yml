@@ -48,3 +48,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ github.event.workflow_run.id }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+      - uses: actions/upload-artifact@v7
+        if: steps.guard.outputs.ok == 'true'
+        with:
+          name: model-usage-triage
+          path: model-usage.json
+          if-no-files-found: ignore

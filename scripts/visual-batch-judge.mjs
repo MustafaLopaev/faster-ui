@@ -166,7 +166,10 @@ if (process.env.PR_NUMBER) {
   postStickyComment(process.env.PR_NUMBER, 'visual-judge', body)
 }
 
-logUsage('visual-judge')
+logUsage(
+  'visual-judge',
+  `judged ${verdicts.length} moved cell(s) — PASS ${count('PASS')}, WARN ${count('WARN')}, FAIL ${count('FAIL')}`,
+)
 
 // Advisory. The blocking half is the pixel comparison, which has already run.
 process.exit(0)
