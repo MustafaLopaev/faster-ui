@@ -76,6 +76,7 @@ export interface IconOnlyButtonProps extends ButtonBaseProps {
     "aria-label": string;
     // (undocumented)
     danger?: never;
+    fullWidth?: never;
     iconOnly: true;
     // (undocumented)
     leftIcon?: never;
@@ -133,6 +134,7 @@ export type InputState = (typeof InputState)[keyof typeof InputState];
 // @public
 export interface TextButtonProps extends ButtonBaseProps {
     danger?: boolean;
+    fullWidth?: boolean;
     // (undocumented)
     iconOnly?: false;
     leftIcon?: ReactNode;
