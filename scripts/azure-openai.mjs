@@ -18,7 +18,7 @@
  * fails, no output changes, the bill just goes up (FR-037).
  */
 
-import { appendFileSync, readFileSync } from 'node:fs'
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 
 export const hasCredential = () => Boolean(process.env.AZURE_OPENAI_API_KEY)
 
@@ -117,17 +117,34 @@ export const imagePart = (path) => ({
 })
 
 /**
- * The per-run usage line (FR-037/FR-039): written to the job summary in CI and
- * to stdout everywhere. `cached prompt` is the number to watch — the review
- * prompts lead with a large stable prefix (constitution, contracts, rubric), so
- * repeat runs should read most of it back from Azure's prompt cache. A zero
- * there across repeated runs means the prefix has stopped matching and every
- * run is paying full price, and nothing else will tell you.
+ * The per-run usage record (FR-037/FR-039): written to the job summary in CI,
+ * to stdout everywhere, and — structured — to `model-usage.json` so the
+ * overall results report (report.yml) can show every AI run's outcome and
+ * cost. `outcome` is one line saying what the run concluded or produced.
+ *
+ * `cached prompt` is the number to watch — the prompts lead with a large
+ * stable prefix (constitution, contracts, rubric), so repeat runs should read
+ * most of it back from Azure's prompt cache. A zero there across repeated
+ * runs means the prefix has stopped matching and every run is paying full
+ * price, and nothing else will tell you.
  */
-export function logUsage(job) {
+export function logUsage(job, outcome = '') {
+  const records = existsSync('model-usage.json') ? JSON.parse(readFileSync('model-usage.json', 'utf8')) : []
+  records.push({
+    job,
+    deployment: process.env.AZURE_OPENAI_DEPLOYMENT || 'gpt-5.1-chat',
+    outcome,
+    calls: usage.calls,
+    prompt_tokens: usage.prompt_tokens,
+    completion_tokens: usage.completion_tokens,
+    cached_tokens: usage.cached_tokens,
+    at: new Date().toISOString(),
+  })
+  writeFileSync('model-usage.json', JSON.stringify(records, null, 2) + '\n')
   const lines = [
     `### Model usage — \`${job}\``,
     '',
+    ...(outcome ? [`> ${outcome}`, ''] : []),
     '| calls | prompt | completion | cached prompt |',
     '| ----- | ------ | ---------- | ------------- |',
     `| ${usage.calls} | ${usage.prompt_tokens} | ${usage.completion_tokens} | ${usage.cached_tokens} |`,

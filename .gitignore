@@ -48,3 +48,4 @@ temp/
 # The overall results report (report.yml / npm run report) — a per-run artifact
 overall-report.html
 report-meta.json
+model-usage.json

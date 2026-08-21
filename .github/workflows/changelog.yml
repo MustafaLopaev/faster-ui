@@ -51,3 +51,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BEFORE_SHA: ${{ github.event.before }}
           AFTER_SHA: ${{ github.sha }}
+      - uses: actions/upload-artifact@v7
+        if: steps.guard.outputs.ok == 'true'
+        with:
+          name: model-usage-draft-changelog
+          path: model-usage.json
+          if-no-files-found: ignore

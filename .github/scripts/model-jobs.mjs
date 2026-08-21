@@ -180,7 +180,10 @@ async function constitutionReview() {
     { maxTokens: 3000 },
   )
   postStickyComment(prNumber, 'constitution-review', text)
-  logUsage('constitution-review')
+  logUsage(
+    'constitution-review',
+    mode === 'full' ? 'full review of the whole diff — comment posted' : `demo review of ${demoFile} — comment posted`,
+  )
 }
 
 // ── semver-classify (B3) ────────────────────────────────────────────────────
@@ -269,7 +272,10 @@ async function semverClassify() {
     'This job does not block. The blocking half is the deterministic `api-surface` gate.',
   ].join('\n')
   postStickyComment(prNumber, 'semver-classify', body)
-  logUsage('semver-classify')
+  logUsage(
+    'semver-classify',
+    `required ${json.required}, claimed ${json.claimed ?? 'none'} — the changelog ${json.agrees ? 'agrees' : 'DISAGREES'}`,
+  )
 }
 
 // ── token-audit (B4) ────────────────────────────────────────────────────────
@@ -324,7 +330,7 @@ async function tokenAudit() {
     { maxTokens: 2000 },
   )
   postStickyComment(prNumber, 'token-audit', text)
-  logUsage('token-audit')
+  logUsage('token-audit', 'semantic token audit of the component diff — comment posted')
 }
 
 // ── coverage-suggest (B5) ───────────────────────────────────────────────────
@@ -337,6 +343,7 @@ async function coverageSuggest() {
   const gate = run('npm', ['run', 'coverage:gate'])
   if (gate.status === 0) {
     postStickyComment(prNumber, 'coverage-suggest', '`npm run coverage:gate` passes — every prop is documented, reachable in the Playground, and rendered by a story. Nothing to suggest.')
+    logUsage('coverage-suggest', 'coverage gate passes — no model call needed')
     return
   }
 
@@ -390,7 +397,7 @@ async function coverageSuggest() {
     { maxTokens: 3000 },
   )
   postStickyComment(prNumber, 'coverage-suggest', text)
-  logUsage('coverage-suggest')
+  logUsage('coverage-suggest', 'coverage gate failed — story suggestion posted')
 }
 
 // ── triage (C2) ─────────────────────────────────────────────────────────────
@@ -470,7 +477,10 @@ async function triage() {
     }
   }
   postStickyComment(prNumber, 'triage', text)
-  logUsage('triage')
+  logUsage(
+    'triage',
+    `CI run ${runId} classified — ${prNumber ? `comment posted on #${prNumber}` : 'no open PR, verdict in the log'}`,
+  )
 }
 
 // ── draft-changelog (C3) ────────────────────────────────────────────────────
@@ -544,7 +554,12 @@ async function draftChangelog() {
     ],
     { maxTokens: 1200, schema, schemaName: 'changelog' },
   )
-  logUsage('draft-changelog')
+  logUsage(
+    'draft-changelog',
+    json.qualifies
+      ? `consumer-visible — drafting under ### ${json.section}: ${json.bullet.slice(0, 120)}`
+      : `nothing consumer-visible in ${after.slice(0, 7)} — no pull request`,
+  )
 
   if (!json.qualifies) {
     console.log(`Nothing consumer-visible in ${after.slice(0, 7)} — no pull request. (${json.reason})`)
