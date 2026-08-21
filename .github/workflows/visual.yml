@@ -248,7 +248,14 @@ jobs:
       contents: write # a NEW BRANCH only — never a push to the default branch
       pull-requests: write
     steps:
+      # `fetch-depth: 0`, and it is load-bearing rather than tidy-minded. The
+      # default shallow checkout gives the branch this job pushes no commit in
+      # common with `main`, and `gh pr create` answers exactly that: "has no
+      # history in common with main". The job then fails AFTER pushing, so the
+      # baselines survive on a branch nobody can open a pull request from.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
