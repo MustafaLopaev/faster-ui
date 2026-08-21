@@ -14,6 +14,7 @@ export const ButtonVariant = {
   outline: "outline",
   ghost: "ghost",
   link: "link",
+  subtle: "subtle",
 } as const;
 export type ButtonVariant = (typeof ButtonVariant)[keyof typeof ButtonVariant];
 
@@ -44,6 +45,7 @@ interface ButtonBaseProps extends ComponentPropsWithoutRef<"button"> {
   size?: ButtonSize;
   /** Busy state: spinner in the leading slot, `aria-busy`, activation suppressed. */
   loading?: boolean;
+  elevated?: boolean;
 }
 
 /** The Button API for every non-`iconOnly` usage. */

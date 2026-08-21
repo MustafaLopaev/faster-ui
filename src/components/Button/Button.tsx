@@ -5,6 +5,7 @@ import { SpinnerIcon } from "../../assets/icons";
 import { IconSlot } from "../internal";
 import {
   BUTTON_BASE,
+  BUTTON_ELEVATED,
   BUTTON_ICON_ONLY_SIZE,
   BUTTON_ICON_ONLY_VARIANT,
   BUTTON_ICON_SLOT,
@@ -33,6 +34,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     size = BUTTON_DEFAULTS.size,
     loading = BUTTON_DEFAULTS.loading,
     iconOnly = BUTTON_DEFAULTS.iconOnly,
+    elevated = false,
     leftIcon,
     rightIcon,
     type = BUTTON_DEFAULTS.type,
@@ -63,6 +65,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       : variant === ButtonVariant.link
         ? cn(BUTTON_LINK_SIZE[size], BUTTON_VARIANT[ButtonVariant.link][tone])
         : cn(BUTTON_SIZE[size], BUTTON_VARIANT[variant][tone]),
+    elevated && BUTTON_ELEVATED,
     className,
   );
 

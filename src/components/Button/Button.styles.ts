@@ -24,6 +24,8 @@ export const BUTTON_ICON_ONLY_SIZE: Record<ButtonSize, string> = {
   [ButtonSize.sm]: "fui:size-6 fui:p-1.25 fui:text-caption fui:rounded-full",
 };
 
+export const BUTTON_ELEVATED = "fui:rounded-[10px]";
+
 export const BUTTON_ICON_SLOT: Record<ButtonSize, string> = {
   [ButtonSize.lg]: "fui:size-4.5",
   [ButtonSize.md]: "fui:size-4",
@@ -48,6 +50,12 @@ export const BUTTON_VARIANT: Record<ButtonVariant, Record<ButtonTone, string>> =
       "fui:font-regular fui:border-0 fui:bg-transparent fui:text-action-secondary-text fui:enabled:hover:bg-action-ghost-hover fui:enabled:active:bg-action-ghost-active fui:disabled:text-action-secondary-text-disabled",
     [ButtonTone.danger]:
       "fui:font-regular fui:border-0 fui:bg-transparent fui:text-action-danger-outline fui:enabled:hover:bg-action-ghost-danger-hover fui:enabled:active:bg-action-ghost-danger-active fui:enabled:active:text-action-danger-outline-active fui:disabled:text-action-danger-outline-disabled",
+  },
+  [ButtonVariant.subtle]: {
+    [ButtonTone.default]:
+      "fui:font-regular fui:border-0 fui:bg-[#F5F5F5] fui:text-action-secondary-text fui:enabled:hover:bg-action-ghost-hover fui:enabled:active:bg-action-ghost-active fui:disabled:text-action-secondary-text-disabled",
+    [ButtonTone.danger]:
+      "fui:font-regular fui:border-0 fui:bg-[#FEF2F2] fui:text-action-danger-outline fui:enabled:hover:bg-action-ghost-danger-hover fui:enabled:active:bg-action-ghost-danger-active fui:disabled:text-action-danger-outline-disabled",
   },
   [ButtonVariant.link]: {
     [ButtonTone.default]:
