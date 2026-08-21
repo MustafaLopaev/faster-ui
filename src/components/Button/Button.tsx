@@ -28,7 +28,7 @@ const toIconOnlyVariant = (variant: ButtonVariant): IconOnlyVariant =>
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(props, ref) {
   const {
-    variant = BUTTON_DEFAULTS.variant,
+    variant = "testasasdsadasd",
     danger = BUTTON_DEFAULTS.danger,
     size = BUTTON_DEFAULTS.size,
     loading = BUTTON_DEFAULTS.loading,
@@ -65,6 +65,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         : cn(BUTTON_SIZE[size], BUTTON_VARIANT[variant][tone]),
     className,
   );
+  console.log("Hello")
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (loading) {
@@ -82,7 +83,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       className={classes}
       aria-busy={loading || undefined}
       data-loading={loading ? "" : undefined}
-      onClick={handleClick}
+      onClick={() => {}}
     >
       {iconOnly ? (
         <IconSlot className={BUTTON_ICON_SLOT[size]}>
