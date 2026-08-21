@@ -5,6 +5,7 @@ import { SpinnerIcon } from "../../assets/icons";
 import { IconSlot } from "../internal";
 import {
   BUTTON_BASE,
+  BUTTON_FULL_WIDTH,
   BUTTON_ICON_ONLY_SIZE,
   BUTTON_ICON_ONLY_VARIANT,
   BUTTON_ICON_SLOT,
@@ -33,6 +34,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     size = BUTTON_DEFAULTS.size,
     loading = BUTTON_DEFAULTS.loading,
     iconOnly = BUTTON_DEFAULTS.iconOnly,
+    fullWidth = BUTTON_DEFAULTS.fullWidth,
     leftIcon,
     rightIcon,
     type = BUTTON_DEFAULTS.type,
@@ -48,9 +50,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         "faster-ui: <Button iconOnly> requires an `aria-label` — it has no visible label to provide an accessible name.",
       );
     }
-    if (danger || variant === ButtonVariant.link || leftIcon != null || rightIcon != null) {
+    if (
+      danger ||
+      variant === ButtonVariant.link ||
+      leftIcon != null ||
+      rightIcon != null ||
+      fullWidth
+    ) {
       console.warn(
-        "faster-ui: <Button iconOnly> supports only the primary/outline/ghost variants in the default tone, without icon slots — no Figma source exists for other combinations.",
+        "faster-ui: <Button iconOnly> supports only the primary/outline/ghost variants in the default tone, without icon slots or `fullWidth` — no Figma source exists for other combinations.",
       );
     }
   }
@@ -63,6 +71,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       : variant === ButtonVariant.link
         ? cn(BUTTON_LINK_SIZE[size], BUTTON_VARIANT[ButtonVariant.link][tone])
         : cn(BUTTON_SIZE[size], BUTTON_VARIANT[variant][tone]),
+    !iconOnly && fullWidth && BUTTON_FULL_WIDTH,
     className,
   );
 

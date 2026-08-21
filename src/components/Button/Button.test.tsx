@@ -151,6 +151,10 @@ describe("Button", () => {
         <Button iconOnly aria-label="Add" leftIcon={icon}>
           {icon}
         </Button>
+        {/* @ts-expect-error a circle has nothing to stretch */}
+        <Button iconOnly aria-label="Add" fullWidth>
+          {icon}
+        </Button>
       </>
     );
     expect(typeof neverRendered).toBe("function");
@@ -170,6 +174,17 @@ describe("Button", () => {
     } as unknown as ButtonProps;
     render(<Button {...illegalCombo}>{icon}</Button>);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("primary/outline/ghost"));
+
+    // `fullWidth` joins that list: a circle has nothing to stretch. The type
+    // says so; this is the backstop for a caller who cast past it.
+    warn.mockClear();
+    const stretchedCircle = {
+      iconOnly: true,
+      "aria-label": "Add",
+      fullWidth: true,
+    } as unknown as ButtonProps;
+    render(<Button {...stretchedCircle}>{icon}</Button>);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("fullWidth"));
     warn.mockRestore();
   });
 

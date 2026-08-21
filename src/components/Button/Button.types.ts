@@ -57,6 +57,12 @@ export interface TextButtonProps extends ButtonBaseProps {
   leftIcon?: ReactNode;
   /** Trailing icon slot (Figma Right Icon=True); presentational. */
   rightIcon?: ReactNode;
+  /**
+   * Stretches the button to fill its container instead of hugging its label.
+   * The matrix `min-width` still applies as a floor, so a full-width button in
+   * a narrow container never renders smaller than its size's Figma minimum.
+   */
+  fullWidth?: boolean;
 }
 
 /** The Button API for circular icon-only usage — `aria-label` is required. */
@@ -68,6 +74,8 @@ export interface IconOnlyButtonProps extends ButtonBaseProps {
   danger?: never;
   leftIcon?: never;
   rightIcon?: never;
+  /** A circle has nothing to stretch: `fullWidth` is a type error here. */
+  fullWidth?: never;
   /** Required: the accessible name — there is no visible label (A11Y-001). */
   "aria-label": string;
 }
@@ -81,6 +89,7 @@ export const BUTTON_DEFAULTS = {
   danger: false,
   loading: false,
   iconOnly: false,
+  fullWidth: false,
   /** Never submit by accident: an unset native `type` inside a form means "submit". */
   type: "button",
 } as const;

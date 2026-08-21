@@ -157,6 +157,7 @@ Four TapTap variants × danger tone × three sizes, with icon slots, a circular
 | `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | 24 / 36 / 40 px |
 | `loading` | `boolean` | `false` | Spinner in the leading slot, `aria-busy`, activation suppressed **without** dropping focus |
 | `leftIcon` / `rightIcon` | `ReactNode` | — | Presentational icon slots (4 px gap) |
+| `fullWidth` | `boolean` | `false` | Fills the container; the size's matrix `min-width` stays the floor. Not available with `iconOnly` |
 | `iconOnly` | `true` | `false` | Circular icon button; children are the icon; **requires `aria-label`**; only `primary`/`outline`/`ghost`, no `danger` (enforced at the type level) |
 
 `type` defaults to `"button"`; `disabled` is the native attribute. The loading

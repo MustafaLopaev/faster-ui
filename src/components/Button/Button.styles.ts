@@ -4,6 +4,13 @@ import type { IconOnlyButtonVariant as IconOnlyVariant } from "./Button.types";
 export const BUTTON_BASE =
   "fui:box-border fui:inline-flex fui:items-center fui:justify-center fui:gap-1 fui:whitespace-nowrap fui:font-sans fui:enabled:cursor-pointer fui:focus-visible:outline-2 fui:focus-visible:outline-solid fui:focus-visible:outline-offset-2 fui:focus-visible:outline-focus-ring";
 
+/**
+ * `w-full` alone, deliberately: the size map already carries the matrix
+ * `min-width`, and width beats min-width only when it is larger — so the floor
+ * survives without a second rule to keep in step with it.
+ */
+export const BUTTON_FULL_WIDTH = "fui:w-full";
+
 export const BUTTON_SIZE: Record<ButtonSize, string> = {
   [ButtonSize.lg]:
     "fui:h-10 fui:px-2 fui:py-2 fui:min-w-26.5 fui:text-subtitle fui:rounded-control",

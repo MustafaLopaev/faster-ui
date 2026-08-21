@@ -61,6 +61,12 @@ const meta = {
         "Circular icon button; children are the icon. Requires `aria-label`; primary/outline/ghost only, no `danger` or icon slots (enforced at the type level).",
       table: { defaultValue: { summary: "false" }, type: { summary: "true" } },
     },
+    fullWidth: {
+      control: "boolean",
+      description:
+        "Stretches the button to fill its container; the size's matrix `min-width` still applies as a floor. Not available in `iconOnly` mode (enforced at the type level).",
+      table: { defaultValue: { summary: "false" }, type: { summary: "boolean" } },
+    },
     leftIcon: {
       control: false,
       description: "Leading icon slot (Figma Left Icon=True); presentational.",
@@ -111,6 +117,7 @@ export const Playground: Story = {
     loading: false,
     disabled: false,
     iconOnly: false,
+    fullWidth: false,
     "aria-label": "",
     className: "",
   } as ButtonProps,
@@ -212,6 +219,37 @@ export const IconOnly: Story = {
           </Button>
         </div>
       ))}
+    </div>
+  ),
+};
+
+/**
+ * A fixed-width container rather than the story canvas: `fullWidth` is a
+ * statement about the PARENT, so a story that stretches to the viewport would
+ * measure the viewport instead of the prop — and would render differently at
+ * each width the visual matrix captures.
+ */
+export const FullWidth: Story = {
+  parameters: STATIC_MATRIX,
+  render: () => (
+    <div className="fui:flex fui:w-80 fui:flex-col fui:gap-4">
+      {SIZES.map((size) => (
+        <Button key={size} size={size} fullWidth>
+          Full width {size}
+        </Button>
+      ))}
+      <Button variant="outline" fullWidth>
+        Outline, full width
+      </Button>
+      <Button variant="outline" fullWidth leftIcon={PlusIcon} rightIcon={ArrowIcon}>
+        Both slots, full width
+      </Button>
+      <Button fullWidth loading>
+        Loading, full width
+      </Button>
+      <Button fullWidth disabled>
+        Disabled, full width
+      </Button>
     </div>
   ),
 };

@@ -211,6 +211,52 @@ describe("<Button /> geometry (B10)", () => {
     });
   });
 
+  it("fullWidth fills its container, and the size min-width remains the floor", () => {
+    // 600px container: wider than every size's matrix min-width, so a
+    // full-width button can only match the container if `w-full` applied.
+    cy.mount(
+      <div style={{ width: 600 }}>
+        <Button data-cy="hugging">Label</Button>
+        {SIZES.map((size) => (
+          <Button key={size} size={size} fullWidth data-cy={`full-${size}`}>
+            Label
+          </Button>
+        ))}
+      </div>,
+    );
+
+    // A default button hugs its label — nowhere near the container.
+    cy.get("[data-cy=hugging]").should(($el) => {
+      expect($el[0].getBoundingClientRect().width, "hugging width").to.be.lessThan(200);
+    });
+
+    SIZES.forEach((size) => {
+      cy.get(`[data-cy=full-${size}]`).should(($el) => {
+        expect($el[0].getBoundingClientRect().width, `${size} fills the container`).to.eq(600);
+      });
+    });
+  });
+
+  it("fullWidth never shrinks below the size min-width", () => {
+    // 40px container: narrower than every matrix min-width, so `w-full` must
+    // lose to the floor rather than collapsing the button.
+    const floors = { lg: 106, md: 98, sm: 62 } as const;
+    cy.mount(
+      <div style={{ width: 40 }}>
+        {SIZES.map((size) => (
+          <Button key={size} size={size} fullWidth data-cy={`squeezed-${size}`}>
+            Label
+          </Button>
+        ))}
+      </div>,
+    );
+    SIZES.forEach((size) => {
+      cy.get(`[data-cy=squeezed-${size}]`).should(($el) => {
+        expect($el[0].getBoundingClientRect().width, `${size} floor`).to.eq(floors[size]);
+      });
+    });
+  });
+
   it("link variant has no box: no padding, no min-width, line-height-driven height", () => {
     cy.mount(
       <Button variant="link" data-cy="link">
