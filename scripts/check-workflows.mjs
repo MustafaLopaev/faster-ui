@@ -19,7 +19,12 @@ import { fileURLToPath } from 'node:url'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const WORKFLOWS = join(root, '.github/workflows')
 
-const SECRET = 'ANTHROPIC_API_KEY'
+// Both names checked: AZURE_OPENAI_API_KEY is the live credential; the
+// Anthropic name is kept so a stray reference reintroduced later is still a
+// credential to these invariants, not an invisible one.
+const SECRET_NAMES = ['AZURE_OPENAI_API_KEY', 'ANTHROPIC_API_KEY']
+const SECRET = 'the model credential (AZURE_OPENAI_API_KEY)'
+const holdsSecret = (text) => SECRET_NAMES.some((name) => text.includes(name))
 const GUARD = 'actions/claude-guard'
 const FORK_GUARD = 'github.event.pull_request.head.repo.full_name == github.repository'
 
@@ -75,7 +80,7 @@ for (const file of files) {
   // 2. The Check invariant (data-model §1): needsCredential && required is
   //    forbidden. A check that cannot run for a fork must never block one, and
   //    the enforcement point is that no required workflow may touch the secret.
-  if (REQUIRED_CHECK_WORKFLOWS.has(file) && text.includes(SECRET)) {
+  if (REQUIRED_CHECK_WORKFLOWS.has(file) && holdsSecret(text)) {
     fail(
       file,
       `references ${SECRET}, but its jobs are required checks. A check that cannot ` +
@@ -90,7 +95,7 @@ for (const file of files) {
   const triggersOnPullRequest = /^\s+pull_request:/m.test(text)
 
   for (const job of jobs) {
-    if (!job.text.includes(SECRET)) continue
+    if (!holdsSecret(job.text)) continue
 
     // 3. The pairing that matters: a job that holds the model credential must
     //    not also hold write access. A job that cannot write cannot be talked

@@ -58,7 +58,7 @@ Each sweep varies **one** axis off the base grid. The rationale per sweep: the o
 
 **States**: `unchanged` · `changed` · `new` (no baseline — must be judged, never silently accepted) · `orphaned` (baseline whose story no longer exists — reported, never silently kept).
 
-**Cold start is its own outcome**, not a run in which every cell happens to be `new`. When `visual/baselines/` is empty nothing has been established, so the pass neither succeeds nor fails: it reports loudly, exits 0, and sets `coldStart: true` in the manifest. Pass 3 is skipped on that flag in both the pull-request path (`visual.yml`'s `cold-start` job condition) and the nightly Batch path.
+**Cold start is its own outcome**, not a run in which every cell happens to be `new`. When `visual/baselines/` is empty nothing has been established, so the pass neither succeeds nor fails: it reports loudly, exits 0, and sets `coldStart: true` in the manifest. Pass 3 is skipped on that flag in both the pull-request path (`visual.yml`'s `cold-start` job condition) and the nightly path.
 
 The reasoning is the one FR-032 applies to the drift watcher's `unreachable`: an all-clear a check did not establish is worse than no report, and a failure it cannot substantiate is noise that blocks every pull request until someone mutes it. The cost matters too — judging all 239 cells against nothing to compare them to is roughly the price of a nightly full sweep, spent to characterise a change that has not happened. Baselines land first, via `gh workflow run visual.yml -f accept-baselines=true`; from then on Pass 3 sees only the cells a change actually moved.
 
@@ -70,9 +70,9 @@ Runs **only** on `changed` and `new` cells (FR-026).
 
 | Property | Value |
 | -------- | ----- |
-| Delivery | `anthropics/claude-code-action@v1`, images read from disk |
-| Model | `claude-opus-5` |
-| Output | `--json-schema` in `claude_args` → validated JSON on `structured_output` |
+| Delivery | `scripts/visual-batch-judge.mjs` — one Azure OpenAI vision completion per cell, images read from disk (amended from `anthropics/claude-code-action@v1` with the Azure migration) |
+| Model | the `AZURE_OPENAI_DEPLOYMENT` repository variable |
+| Output | JSON-schema structured output, validated per cell |
 | Cached prefix | `visual/rubric.md` + the token contract + the extraction records (~25K tokens) |
 | Blocking | **advisory** until measured (FR-020, SC-007) |
 | Credential absent | skips; **Pass 2 still runs and still reports differences** (FR-030, US4 scenario 7) |
@@ -106,9 +106,9 @@ Runs **only** on `changed` and `new` cells (FR-026).
 | ---- | --------- | ---------------- |
 | Pass 2 only (no changes) | most PRs | $0 |
 | Pass 3, typical change (4–20 cells) | styling PRs | $0.15–0.60 |
-| Full sweep, all 233 cells | nightly, **Batch API** | ~$1.20 |
+| Full sweep, all 233 cells | nightly, `visual-batch-judge.mjs` | low single digits |
 
-The nightly sweep uses the Anthropic SDK's Batch API rather than the action, because the action does not expose it and FR-038 requires non-blocking checks take the lower-cost asynchronous path. This is the sole justification for the `@anthropic-ai/sdk` devDependency (Complexity Tracking row 4).
+The nightly sweep and the pull-request judge are the SAME script since the Azure migration — the sweep just runs with no PR to comment on, keeping the whole-matrix cost off the pull-request path (FR-038). The Anthropic Batch API and the `@anthropic-ai/sdk` devDependency it justified (Complexity Tracking row 4) are gone; the shared prompt prefix now leans on Azure's automatic prompt caching, reported per run (FR-037).
 
 ## Job graph
 

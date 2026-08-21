@@ -1,31 +1,29 @@
 /**
- * Weekly deep audit (004 C5 / FR-035 / FR-038), on the Batch API.
+ * Weekly deep audit (004 C5 / FR-035), on Azure OpenAI chat completions.
  *
  * THE DIFF IS THE PRODUCT. A standing audit that reports the same twelve
  * findings every week is ignored by week three, and the week it finds something
  * new nobody reads it. So this compares against last week's report and leads
  * with what changed — the findings themselves are supporting material.
  *
- * Off the pull-request path and blocking nothing, so FR-038 puts it on the
- * lower-cost asynchronous path. Along with the nightly visual sweep, this is
- * the reason `@anthropic-ai/sdk` is a devDependency.
+ * The audit definition, the constitution and the repository guide change
+ * rarely, so they lead the prompt as a stable prefix Azure's prompt cache can
+ * hold across weeks; only the metrics and last week's report — the volatile
+ * half — come after (FR-037).
  */
-import Anthropic from '@anthropic-ai/sdk'
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { chat, hasCredential, logUsage } from './azure-openai.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const r = (p) => resolve(root, p)
 
-const MODEL = 'claude-opus-5'
 const ISSUE_TITLE_PREFIX = 'Weekly audit —'
-const POLL_INTERVAL_MS = 30_000
-const MAX_WAIT_MS = 4 * 60 * 60 * 1000
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.log('ANTHROPIC_API_KEY is not set — skipping the audit. This is a success outcome.')
+if (!hasCredential()) {
+  console.log('AZURE_OPENAI_API_KEY is not set — skipping the audit. This is a success outcome.')
   process.exit(0)
 }
 
@@ -60,26 +58,17 @@ const metrics = existsSync(r('metrics.md')) ? readFileSync(r('metrics.md'), 'utf
 const previous = previousReport()
 
 const system = [
-  {
-    type: 'text',
-    // Stable prefix: the skill, the constitution and the repository guide change
-    // rarely, so they cache across weeks. Only the metrics and last week's
-    // report — the volatile half — come after, in the user turn.
-    text: [
-      'You are running this repository\'s own production-readiness audit against `main`.',
-      '',
-      '── THE AUDIT DEFINITION ──',
-      skill,
-      '',
-      '── THE CONSTITUTION ──',
-      constitution,
-      '',
-      '── SETTLED ARCHITECTURE (do not re-litigate any of this) ──',
-      guide,
-    ].join('\n'),
-    cache_control: { type: 'ephemeral' },
-  },
-]
+  'You are running this repository\'s own production-readiness audit against `main`.',
+  '',
+  '── THE AUDIT DEFINITION ──',
+  skill,
+  '',
+  '── THE CONSTITUTION ──',
+  constitution,
+  '',
+  '── SETTLED ARCHITECTURE (do not re-litigate any of this) ──',
+  guide,
+].join('\n')
 
 const userText = [
   '── MEASURED THIS WEEK ──',
@@ -115,62 +104,28 @@ const userText = [
   'Reply with the issue body in Markdown, and nothing else.',
 ].join('\n')
 
-const client = new Anthropic()
-
-console.log('Submitting the weekly audit to the Batch API…')
-let batch = await client.messages.batches.create({
-  requests: [
-    {
-      custom_id: 'weekly-audit',
-      params: { model: MODEL, max_tokens: 8192, system, messages: [{ role: 'user', content: userText }] },
-    },
+console.log('Running the weekly audit on Azure OpenAI…')
+const { text: body } = await chat(
+  [
+    { role: 'system', content: system },
+    { role: 'user', content: userText },
   ],
-})
+  { maxTokens: 8192 },
+)
 
-const deadline = Date.now() + MAX_WAIT_MS
-/* oxlint-disable no-await-in-loop -- polling is sequential by definition */
-while (batch.processing_status === 'in_progress') {
-  if (Date.now() > deadline) {
-    console.error(`✖ Batch ${batch.id} did not finish within the wait window.`)
-    process.exit(1)
-  }
-  await new Promise((done) => setTimeout(done, POLL_INTERVAL_MS))
-  batch = await client.messages.batches.retrieve(batch.id)
-  console.log(`  ${batch.processing_status}`)
-}
-/* oxlint-enable no-await-in-loop */
-
-let body = ''
-let usage = null
-for await (const result of await client.messages.batches.results(batch.id)) {
-  if (result.result.type !== 'succeeded') {
-    console.error(`✖ The audit request did not succeed: ${result.result.type}`)
-    process.exit(1)
-  }
-  usage = result.result.message.usage
-  body = result.result.message.content
-    .filter((b) => b.type === 'text')
-    .map((b) => b.text)
-    .join('')
-}
-
-const date = new Date(batch.created_at ?? Date.now()).toISOString().slice(0, 10)
+const date = new Date().toISOString().slice(0, 10)
 const title = `${ISSUE_TITLE_PREFIX} ${date}`
 writeFileSync(r('audit-report.md'), body + '\n')
 
-gh(['issue', 'create', '--title', title, '--body-file', r('audit-report.md'), '--label', 'audit'], true)
+// Loud on failure: an audit that runs and tells nobody is the silent-failure
+// class this pipeline exists to prevent. (First hit: the `audit` label did not
+// exist on the repo and `gh issue create` failed invisibly for it.)
+const created = gh(['issue', 'create', '--title', title, '--body-file', r('audit-report.md'), '--label', 'audit'])
+if (!created) {
+  console.error('✖ The audit ran but the issue was not created. The report is in the run artifact.')
+  process.exitCode = 1
+}
 
 console.log(`\n${title}\n`)
 console.log(body.slice(0, 2000))
-console.log(
-  `\nUsage — input ${usage?.input_tokens ?? 0}, output ${usage?.output_tokens ?? 0}, cache read ${
-    usage?.cache_read_input_tokens ?? 0
-  }`,
-)
-if ((usage?.cache_read_input_tokens ?? 0) === 0) {
-  console.log(
-    '⚠ Zero cache reads. Expected on the first run and after the skill, the constitution\n' +
-      '  or CLAUDE.md change. If it stays zero week after week, something volatile has\n' +
-      '  drifted into the cached prefix and every run is paying full price (FR-037).',
-  )
-}
+logUsage('weekly-audit')

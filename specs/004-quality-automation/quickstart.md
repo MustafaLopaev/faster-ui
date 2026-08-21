@@ -13,7 +13,7 @@ npm run build           # `consumers` and `api-surface` need dist/
 npm run build-storybook # visual capture needs storybook-static/
 ```
 
-For the model-driven scenarios (5–8): `ANTHROPIC_API_KEY` as a repository secret. **Scenarios 1–4 and 9 need no credential** and must pass without one — that is the point of SC-005.
+For the model-driven scenarios (5–8): `AZURE_OPENAI_API_KEY` as a repository secret. **Scenarios 1–4 and 9 need no credential** and must pass without one — that is the point of SC-005.
 
 Local quirk: in shells exporting `ELECTRON_RUN_AS_NODE=1` (VS Code extension terminals — *verified set in this environment*), Cypress needs `env -u ELECTRON_RUN_AS_NODE npm run …`. GitHub runners never set it.
 
@@ -187,7 +187,7 @@ md: 'fui:h-[36px] fui:overflow-hidden fui:px-2 …'   // was fui:h-9 — identic
 
 > An earlier draft asked for the `min-width` to be *narrowed*. That cannot clip in this token layer: `min-w-*`, `h-*` and the type ramp are all rem-based, so at 200% they scale together and a narrower button is simply a narrower button. A px-pinned box against a rem ramp is the defect that actually only bites at 200% — and `npm run lint:tokens` catches the arbitrary value independently, which is what having both gates is for.
 
-**Verify the credential-absent path (US4 scenario 7)** *(verified)*: with `ANTHROPIC_API_KEY` unset, `npm run visual:compare` still ran and still reported all 14 changed cells, and `scripts/visual-batch-judge.mjs` exited 0 with *"skipping judgment — the comparison already ran"*. Only judgment is skipped. A visual check that goes blind without a credential would be useless to exactly the contributors who most need it.
+**Verify the credential-absent path (US4 scenario 7)** *(verified)*: with `AZURE_OPENAI_API_KEY` unset, `npm run visual:compare` still ran and still reported all 14 changed cells, and `scripts/visual-batch-judge.mjs` exited 0 with *"skipping judgment — the comparison already ran"*. Only judgment is skipped. A visual check that goes blind without a credential would be useless to exactly the contributors who most need it.
 
 ---
 
@@ -221,7 +221,7 @@ md: 'fui:h-[36px] fui:overflow-hidden fui:px-2 …'   // was fui:h-9 — identic
 
 ## Scenario 11 — A contributor without the credential gets a clean verdict
 
-**Do it** — open a pull request from a fork, or unset `ANTHROPIC_API_KEY` and push a `src/**` change.
+**Do it** — open a pull request from a fork, or unset `AZURE_OPENAI_API_KEY` and push a `src/**` change.
 
 **Expect** (SC-005):
 
@@ -239,7 +239,7 @@ md: 'fui:h-[36px] fui:overflow-hidden fui:px-2 …'   // was fui:h-9 — identic
 
 | # | Task | Blocks |
 | - | ---- | ------ |
-| 1 | Add `ANTHROPIC_API_KEY` as a repository secret, or install the Claude GitHub App | Scenarios 5–8; Phases 2–4 |
+| 1 | Add `AZURE_OPENAI_API_KEY` as a repository secret (+ the `AZURE_OPENAI_*` endpoint variables) | Scenarios 5–8; Phases 2–4 |
 | 2 | Mark `ssr`, `consumers`, `a11y`, `api-surface` as required checks on `main` (where the plan permits — 003 research R-6) | Nothing; the red verdict is the plan-independent gate |
 | 3 | Commit the first baseline set after Scenario 7's stability run | Phase 3 |
 | 4 | Confirm the three Phase-0 defaults or overturn them: viewport set, 20-change advisory period, committed-image baselines | Phase 3 |
