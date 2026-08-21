@@ -14,6 +14,7 @@ layer — see `specs/004-quality-automation/`).
 | `triage.yml` | `workflow_run` on `CI` failure | never |
 | `changelog.yml` | `push` to `main` | never |
 | `audit.yml` | weekly `schedule`, `workflow_dispatch` | never |
+| `report.yml` | `workflow_run` on `CI` completion, `workflow_dispatch` | never |
 
 Job ids are API. Required-check configuration and the README badges reference them;
 renaming one is a breaking change to repository settings.
@@ -158,6 +159,17 @@ the job's entire output. Because the SCRIPT posts rather than the model calling
 a comment tool, the failure mode findings.md F-9 records against the retired
 agentic action — a verdict reached with no way to say so — is structurally
 gone.
+
+## The overall results report
+
+`report.yml` is the pipeline's closing act: when CI completes for a commit it
+waits for the commit's other workflows to settle, then renders everything that
+ran — every workflow, every job with conclusion and duration, the model-driven
+verdict comments, and each run's artifacts — into one self-contained
+`overall-report.html` (`scripts/run-report.mjs`; no model credential, reads
+only). The file lands as the `overall-report` artifact, a compact table goes to
+the job summary, and on pull requests a sticky comment links the download.
+Locally: `npm run report` (defaults to the checked-out HEAD).
 
 ## Large diffs
 
