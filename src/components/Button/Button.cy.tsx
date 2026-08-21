@@ -225,7 +225,7 @@ describe("<Button /> geometry (B10)", () => {
     });
   });
 
-  it("iconOnly renders circular squares 40/36/24 with pad 11/10/5", () => {
+  it("iconOnly renders squares 40/36/24 with pad 11/10/5 at the control radius", () => {
     const geometry = { lg: ["40px", "11px"], md: ["36px", "10px"], sm: ["24px", "5px"] } as const;
     cy.mount(
       <div>
@@ -250,7 +250,7 @@ describe("<Button /> geometry (B10)", () => {
         expect(cs.width, `${size} square width`).to.eq(geometry[size][0]);
         expect(cs.height, `${size} square height`).to.eq(geometry[size][0]);
         expect(cs.paddingTop, `${size} padding`).to.eq(geometry[size][1]);
-        expect(cs.borderTopLeftRadius, `${size} circular`).to.eq("999px");
+        expect(cs.borderTopLeftRadius, `${size} control radius`).to.eq("4px");
       });
     });
   });
