@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Input } from "./Input";
+import { INPUT_DEFAULTS, InputSize } from "./Input.types";
 
 const SearchIcon = (
   <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="fui:size-full">
@@ -24,6 +25,91 @@ const meta = {
   title: "Components/Input",
   component: Input,
   parameters: { layout: "centered" },
+  // Controls belong on `meta`, not on one story: meta-level argTypes apply to
+  // every story in the file — including the one autodocs renders as its
+  // primary — so a reader can drive the component from wherever they landed.
+  // Declared here rather than left to docgen for two reasons: a `ReactNode`
+  // prop has no inferrable control (it would fall through to a JSON editor),
+  // and the native `<input>` attributes are filtered out of docgen on purpose
+  // (see .storybook/main.ts), so without these rows `placeholder`, `disabled`
+  // and `type` have no control at all.
+  argTypes: {
+    size: {
+      control: "select",
+      options: Object.values(InputSize),
+      description: "Figma Small/Medium/Large (24/36/40px).",
+      table: {
+        defaultValue: { summary: INPUT_DEFAULTS.size },
+        type: { summary: "'sm' | 'md' | 'lg'" },
+      },
+    },
+    label: {
+      control: "text",
+      description: "Visible label rendered above the field, associated via htmlFor.",
+      table: { type: { summary: "ReactNode" } },
+    },
+    error: {
+      control: "text",
+      description: "Presence switches the field into the error state.",
+      table: { type: { summary: "string" } },
+    },
+    prefix: {
+      control: "text",
+      description: "Static leading affix text inside the field.",
+      table: { type: { summary: "ReactNode" } },
+    },
+    suffix: {
+      control: "text",
+      description: "Static trailing affix text inside the field.",
+      table: { type: { summary: "ReactNode" } },
+    },
+    clearable: {
+      control: "boolean",
+      description: "Clear affordance while the field has a value.",
+      table: {
+        defaultValue: { summary: String(INPUT_DEFAULTS.clearable) },
+        type: { summary: "boolean" },
+      },
+    },
+    leftIcon: {
+      control: false,
+      description: "Leading in-field icon (ReactNode); presentational.",
+      table: { type: { summary: "ReactNode" } },
+    },
+    rightIcon: {
+      control: false,
+      description: "Trailing in-field icon (ReactNode); presentational.",
+      table: { type: { summary: "ReactNode" } },
+    },
+    onClear: { control: false, table: { type: { summary: "() => void" } } },
+    placeholder: {
+      control: "text",
+      description: "The native attribute; renders in the placeholder ink.",
+      table: { type: { summary: "string" } },
+    },
+    disabled: {
+      control: "boolean",
+      description: "The native attribute; drives the Figma disabled set.",
+      table: { type: { summary: "boolean" } },
+    },
+    readOnly: {
+      control: "boolean",
+      description: "The native attribute; suppresses the clear affordance and the steppers.",
+      table: { type: { summary: "boolean" } },
+    },
+    required: { control: "boolean", table: { type: { summary: "boolean" } } },
+    type: {
+      control: "select",
+      options: ["text", "email", "password", "search", "tel", "url", "number"],
+      description: "The native attribute; `number` adds the stepper column.",
+      table: { type: { summary: "string" } },
+    },
+    className: {
+      control: "text",
+      description: "Merge-safe escape hatch on the root.",
+      table: { type: { summary: "string" } },
+    },
+  },
   decorators: [
     (Story) => (
       <div className="fui:w-80">
@@ -36,6 +122,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/**
+ * `Disabled`, `Adornments` and `Sizes` render fixed grids from a zero-arity
+ * `render`, so Storybook infers no controls for them and the meta-level
+ * argTypes would only offer widgets that change nothing. `Default`, `Error`
+ * and `Playground` are args-driven and keep their panel.
+ */
+const STATIC_GRID = { controls: { disable: true } };
+
 export const Default: Story = {
   args: { label: "Email", placeholder: "you@example.com" },
 };
@@ -45,6 +139,7 @@ export const Error: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: STATIC_GRID,
   render: () => (
     <div className="fui:flex fui:flex-col fui:gap-4">
       <Input label="Empty" placeholder="Placeholder ink" disabled />
@@ -54,6 +149,7 @@ export const Disabled: Story = {
 };
 
 export const Adornments: Story = {
+  parameters: STATIC_GRID,
   render: () => (
     <div className="fui:flex fui:flex-col fui:gap-4">
       <Input label="Search" leftIcon={SearchIcon} placeholder="Left icon" clearable />
@@ -67,6 +163,7 @@ export const Adornments: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: STATIC_GRID,
   render: () => (
     <div className="fui:flex fui:flex-col fui:gap-4">
       <Input size="lg" label="Large (40px)" placeholder="16/24 ramp" />
@@ -87,20 +184,6 @@ export const Playground: Story = {
     prefix: "",
     suffix: "",
     className: "",
-  },
-  argTypes: {
-    size: { control: "select", options: ["sm", "md", "lg"] },
-    label: { control: "text" },
-    error: { control: "text", description: "Presence switches the field into the error state" },
-    placeholder: { control: "text" },
-    disabled: { control: "boolean" },
-    clearable: { control: "boolean" },
-    prefix: { control: "text" },
-    suffix: { control: "text" },
-    leftIcon: { control: false, description: "Leading in-field icon (ReactNode)" },
-    rightIcon: { control: false, description: "Trailing in-field icon (ReactNode)" },
-    onClear: { control: false },
-    className: { control: "text", description: "Merge-safe escape hatch on the root" },
   },
   render: ({ error, prefix, suffix, ...args }) => (
     <Input

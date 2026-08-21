@@ -29,6 +29,20 @@ file has no section for the version being released.
 
 ### Fixed
 
+- Storybook controls drive the components again. Props typed as a const-object
+  union (`size`, `variant`) or as `ReactNode` (`label`, `title`, `prefix`,
+  `suffix`) were rendered as JSON *object* editors instead of selects and text
+  fields, so changing them in the Controls panel or on an autodocs page did
+  nothing. Props inherited from the native element (`placeholder`, `disabled`,
+  `type`) had no control at all. Prop extraction now runs through
+  react-docgen-typescript, and each component's controls are declared on the
+  story `meta` so every story gets them — not just `Playground`.
+- The Button and Dialog autodocs pages had an inert Controls table. Autodocs
+  renders a file's *first* story as its primary, and theirs was a fixed matrix
+  whose `render` takes no args — Storybook wires controls only for a story
+  whose `render` accepts them. `Playground` is now the first story in both
+  files, and every fixed-matrix story sets `controls: { disable: true }` so its
+  panel no longer offers widgets that cannot move anything.
 - The exported const unions (`ButtonSize`, `ButtonVariant`, `ButtonTone`,
   `IconOnlyButtonVariant`, `InputSize`, `InputState`, `DialogSize`) carry their
   JSDoc again — the types/styles split had dropped it, so IntelliSense showed
