@@ -93,86 +93,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const SIZES = [ButtonSize.lg, ButtonSize.md, ButtonSize.sm] as const;
-
-function MatrixGrid({ variant, danger }: { variant?: ButtonVariant; danger?: boolean }) {
-  return (
-    <div className="fui:flex fui:flex-col fui:gap-4">
-      {SIZES.map((size) => (
-        <div key={size} className="fui:flex fui:items-center fui:gap-4">
-          <Button variant={variant} danger={danger} size={size}>
-            Button
-          </Button>
-          <Button variant={variant} danger={danger} size={size} disabled>
-            Disabled
-          </Button>
-          <Button variant={variant} danger={danger} size={size} loading>
-            Loading
-          </Button>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export const Primary: Story = { render: () => <MatrixGrid variant={ButtonVariant.primary} /> };
-export const PrimaryDanger: Story = {
-  render: () => <MatrixGrid variant={ButtonVariant.primary} danger />,
-};
-export const Outline: Story = { render: () => <MatrixGrid variant={ButtonVariant.outline} /> };
-export const OutlineDanger: Story = {
-  render: () => <MatrixGrid variant={ButtonVariant.outline} danger />,
-};
-export const Ghost: Story = { render: () => <MatrixGrid variant={ButtonVariant.ghost} /> };
-export const GhostDanger: Story = {
-  render: () => <MatrixGrid variant={ButtonVariant.ghost} danger />,
-};
-export const Link: Story = { render: () => <MatrixGrid variant={ButtonVariant.link} /> };
-export const LinkDanger: Story = {
-  render: () => <MatrixGrid variant={ButtonVariant.link} danger />,
-};
-
-export const IconOnly: Story = {
-  render: () => (
-    <div className="fui:flex fui:flex-col fui:gap-4">
-      {(["primary", "outline", "ghost"] as const).map((variant) => (
-        <div key={variant} className="fui:flex fui:items-center fui:gap-4">
-          {SIZES.map((size) => (
-            <Button
-              key={size}
-              iconOnly
-              aria-label={`Add (${variant} ${size})`}
-              variant={variant}
-              size={size}
-            >
-              {PlusIcon}
-            </Button>
-          ))}
-          <Button iconOnly aria-label={`Add (${variant} disabled)`} variant={variant} disabled>
-            {PlusIcon}
-          </Button>
-          <Button iconOnly aria-label={`Add (${variant} loading)`} variant={variant} loading>
-            {PlusIcon}
-          </Button>
-        </div>
-      ))}
-    </div>
-  ),
-};
-
-export const WithIcons: Story = {
-  render: () => (
-    <div className="fui:flex fui:items-center fui:gap-4">
-      <Button leftIcon={PlusIcon}>Add item</Button>
-      <Button variant="outline" rightIcon={ArrowIcon}>
-        Continue
-      </Button>
-      <Button variant="ghost" leftIcon={PlusIcon} rightIcon={ArrowIcon}>
-        Both slots
-      </Button>
-    </div>
-  ),
-};
+/**
+ * Storybook infers controls only for a story whose `render` accepts args
+ * (`__isArgsStory = render.length > 0`). The matrix stories below take none —
+ * they render a fixed grid — so their controls could never do anything, yet the
+ * meta-level argTypes would still put live-looking selects in the panel. The
+ * panel is switched off for them, and `Playground` is the interactive surface.
+ */
+const STATIC_MATRIX = { controls: { disable: true } };
 
 export const Playground: Story = {
   args: {
@@ -202,4 +130,103 @@ export const Playground: Story = {
         }) as unknown as ButtonProps;
     return <Button {...props} />;
   },
+};
+
+const SIZES = [ButtonSize.lg, ButtonSize.md, ButtonSize.sm] as const;
+
+function MatrixGrid({ variant, danger }: { variant?: ButtonVariant; danger?: boolean }) {
+  return (
+    <div className="fui:flex fui:flex-col fui:gap-4">
+      {SIZES.map((size) => (
+        <div key={size} className="fui:flex fui:items-center fui:gap-4">
+          <Button variant={variant} danger={danger} size={size}>
+            Button
+          </Button>
+          <Button variant={variant} danger={danger} size={size} disabled>
+            Disabled
+          </Button>
+          <Button variant={variant} danger={danger} size={size} loading>
+            Loading
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export const Primary: Story = {
+  parameters: STATIC_MATRIX,
+  render: () => <MatrixGrid variant={ButtonVariant.primary} />,
+};
+export const PrimaryDanger: Story = {
+  parameters: STATIC_MATRIX,
+  render: () => <MatrixGrid variant={ButtonVariant.primary} danger />,
+};
+export const Outline: Story = {
+  parameters: STATIC_MATRIX,
+  render: () => <MatrixGrid variant={ButtonVariant.outline} />,
+};
+export const OutlineDanger: Story = {
+  parameters: STATIC_MATRIX,
+  render: () => <MatrixGrid variant={ButtonVariant.outline} danger />,
+};
+export const Ghost: Story = {
+  parameters: STATIC_MATRIX,
+  render: () => <MatrixGrid variant={ButtonVariant.ghost} />,
+};
+export const GhostDanger: Story = {
+  parameters: STATIC_MATRIX,
+  render: () => <MatrixGrid variant={ButtonVariant.ghost} danger />,
+};
+export const Link: Story = {
+  parameters: STATIC_MATRIX,
+  render: () => <MatrixGrid variant={ButtonVariant.link} />,
+};
+export const LinkDanger: Story = {
+  parameters: STATIC_MATRIX,
+  render: () => <MatrixGrid variant={ButtonVariant.link} danger />,
+};
+
+export const IconOnly: Story = {
+  parameters: STATIC_MATRIX,
+  render: () => (
+    <div className="fui:flex fui:flex-col fui:gap-4">
+      {(["primary", "outline", "ghost"] as const).map((variant) => (
+        <div key={variant} className="fui:flex fui:items-center fui:gap-4">
+          {SIZES.map((size) => (
+            <Button
+              key={size}
+              iconOnly
+              aria-label={`Add (${variant} ${size})`}
+              variant={variant}
+              size={size}
+            >
+              {PlusIcon}
+            </Button>
+          ))}
+          <Button iconOnly aria-label={`Add (${variant} disabled)`} variant={variant} disabled>
+            {PlusIcon}
+          </Button>
+          <Button iconOnly aria-label={`Add (${variant} loading)`} variant={variant} loading>
+            {PlusIcon}
+          </Button>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+export const WithIcons: Story = {
+  parameters: STATIC_MATRIX,
+  render: () => (
+    <div className="fui:flex fui:items-center fui:gap-4">
+      <Button leftIcon={PlusIcon}>Add item</Button>
+      <Button variant="outline" rightIcon={ArrowIcon}>
+        Continue
+      </Button>
+      <Button variant="ghost" leftIcon={PlusIcon} rightIcon={ArrowIcon}>
+        Both slots
+      </Button>
+    </div>
+  ),
 };
