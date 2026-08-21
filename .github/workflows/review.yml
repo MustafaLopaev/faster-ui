@@ -117,6 +117,12 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           REVIEW_MODE: ${{ needs.changes.outputs.mode }}
           DEMO_FILE: ${{ needs.changes.outputs.demo-file }}
+      - uses: actions/upload-artifact@v7
+        if: steps.guard.outputs.ok == 'true'
+        with:
+          name: model-usage-constitution-review
+          path: model-usage.json
+          if-no-files-found: ignore
 
   # ── B3 — the version-increment classifier ─────────────────────────────────
   semver-classify:
@@ -151,6 +157,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      - uses: actions/upload-artifact@v7
+        if: steps.guard.outputs.ok == 'true'
+        with:
+          name: model-usage-semver-classify
+          path: model-usage.json
+          if-no-files-found: ignore
 
   # ── B4 — the token audit ──────────────────────────────────────────────────
   token-audit:
@@ -185,6 +197,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      - uses: actions/upload-artifact@v7
+        if: steps.guard.outputs.ok == 'true'
+        with:
+          name: model-usage-token-audit
+          path: model-usage.json
+          if-no-files-found: ignore
 
   # ── B5 — story suggestions ────────────────────────────────────────────────
   # DETECTION is deterministic and blocks, in ci.yml's `coverage-gate` job.
@@ -229,3 +247,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      - uses: actions/upload-artifact@v7
+        if: steps.guard.outputs.ok == 'true'
+        with:
+          name: model-usage-coverage-suggest
+          path: model-usage.json
+          if-no-files-found: ignore

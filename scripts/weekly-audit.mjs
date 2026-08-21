@@ -128,4 +128,4 @@ if (!created) {
 
 console.log(`\n${title}\n`)
 console.log(body.slice(0, 2000))
-logUsage('weekly-audit')
+logUsage('weekly-audit', created ? `issue "${title}" created` : `report written but the issue was NOT created`)
